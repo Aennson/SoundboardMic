@@ -1,0 +1,215 @@
+<Window x:Class="SoundboardMic.App.Views.AudioEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:SoundboardMic.App.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:AudioEditViewModel}"
+        Title="Editar áudio" Height="560" Width="520"
+        WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
+        AllowsTransparency="True" Background="Transparent"
+        FontFamily="{StaticResource AppFont}">
+
+    <Border Background="{StaticResource BgLayerBrush}" CornerRadius="16"
+            BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="30" ShadowDepth="8" Opacity="0.55" Color="Black" />
+        </Border.Effect>
+
+        <Grid Margin="28">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Cabeçalho -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="42" Height="42" CornerRadius="11" Background="{StaticResource AccentGradientBrush}"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="&#xE8D6;" Style="{StaticResource Glyph}" FontSize="20" Foreground="White" />
+                    </Border>
+                    <TextBlock Text="{Binding Titulo}" Style="{StaticResource H1}" Margin="14,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+                <Button x:Name="BtnClose" Style="{StaticResource IconButton}" Content="&#xE711;"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Click="Fechar_Click"
+                        ToolTip="Fechar" />
+            </Grid>
+
+            <!-- Conteúdo -->
+            <StackPanel Grid.Row="1">
+
+                <TextBlock Text="NOME" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="2,0,0,6" />
+                <TextBox Style="{StaticResource AppTextBox}"
+                         Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Text="ARQUIVO DE ÁUDIO" Style="{StaticResource Caption}" FontWeight="SemiBold"
+                           Margin="2,18,0,6" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="{StaticResource BgBaseBrush}"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="9" Height="42" Padding="14,0">
+                        <TextBlock Text="{Binding NomeArquivo}" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                    </Border>
+                    <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Margin="10,0,0,0"
+                            Command="{Binding PickFileCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8E5;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock Text="Procurar" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Volume -->
+                <Grid Margin="0,18,0,0">
+                    <TextBlock Text="VOLUME" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="2,0,0,6" />
+                    <TextBlock Text="{Binding Volume, Converter={StaticResource VolToPercent}}"
+                               Style="{StaticResource Caption}" HorizontalAlignment="Right"
+                               Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="&#xE767;" FontFamily="{StaticResource IconFont}"
+                               Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"
+                               Margin="0,0,12,0" />
+                    <Slider Grid.Column="1" Style="{StaticResource AppSlider}" Minimum="0" Maximum="2"
+                            Value="{Binding Volume, Mode=TwoWay}" />
+                    <Button Grid.Column="2" Style="{StaticResource PlayButton}" Width="40" Height="40" Margin="12,0,0,0"
+                            Command="{Binding PreviewCommand}" Content="&#xE768;" ToolTip="Ouvir prévia (nos fones)" />
+                </Grid>
+
+                <!-- Atalho -->
+                <TextBlock Text="ATALHO (TECLA DE DISPARO)" Style="{StaticResource Caption}" FontWeight="SemiBold"
+                           Margin="2,20,0,6" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Height="46" CornerRadius="9"
+                            Background="{StaticResource BgBaseBrush}" BorderThickness="1.5">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding GravandoAtalho}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                        <Setter Property="Background" Value="#231F3A" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <!-- Texto quando gravando -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        Visibility="{Binding GravandoAtalho, Converter={StaticResource BoolToVis}}">
+                                <Ellipse Width="9" Height="9" Fill="{StaticResource DangerBrush}" Margin="0,0,8,0">
+                                    <Ellipse.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                     From="1" To="0.2" Duration="0:0:0.7" />
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </Ellipse.Triggers>
+                                </Ellipse>
+                                <TextBlock Text="Pressione a combinação…" Foreground="{StaticResource TextPrimaryBrush}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                            <!-- Chip do atalho quando não gravando -->
+                            <Grid Visibility="{Binding GravandoAtalho, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+                                <Border Background="{StaticResource CardHoverBrush}" CornerRadius="7" Padding="12,5"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                        Visibility="{Binding Teclas, Converter={StaticResource StringToVis}}">
+                                    <TextBlock Text="{Binding Teclas}" Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold" FontSize="14" />
+                                </Border>
+                                <TextBlock Text="Nenhum atalho definido" Foreground="{StaticResource TextMutedBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Teclas}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="46" Margin="10,0,0,0"
+                            Command="{Binding ToggleGravacaoCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE765;" FontFamily="{StaticResource IconFont}" FontSize="16"
+                                       VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="Gravar" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding GravandoAtalho}" Value="True">
+                                                <Setter Property="Text" Value="Cancelar" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="2" Style="{StaticResource IconButton}" Width="46" Height="46" Margin="6,0,0,0"
+                            Content="&#xE74D;" Command="{Binding LimparAtalhoCommand}" ToolTip="Remover atalho" />
+                </Grid>
+
+                <!-- Erro -->
+                <Border Background="#3A1F26" CornerRadius="9" Padding="14,10" Margin="0,16,0,0"
+                        Visibility="{Binding Erro, Converter={StaticResource StringToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE783;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                                   Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <TextBlock Text="{Binding Erro}" Foreground="{StaticResource DangerBrush}"
+                                   TextWrapping="Wrap" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Rodapé -->
+            <Grid Grid.Row="2" Margin="0,24,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Style="{StaticResource SecondaryButton}" Content="Cancelar"
+                        HorizontalAlignment="Left" Width="120" Click="Fechar_Click" />
+                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}"
+                        Width="150">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE74E;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="Salvar" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

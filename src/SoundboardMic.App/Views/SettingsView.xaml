@@ -1,0 +1,299 @@
+<UserControl x:Class="SoundboardMic.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SoundboardMic.App.ViewModels"
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="820"
+             d:DataContext="{d:DesignInstance vm:SettingsViewModel}"
+             FontFamily="{StaticResource AppFont}">
+
+    <UserControl.Resources>
+        <!-- Rótulo de campo -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="2,0,0,7" />
+        </Style>
+        <!-- Título de seção -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource H2}">
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
+        <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+
+            <!-- ===== Dispositivos ===== -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <TextBlock Text="&#xE720;" Style="{StaticResource Glyph}" FontSize="18"
+                                   Foreground="{StaticResource AccentBrush}" Margin="0,0,10,0" />
+                        <TextBlock Text="Dispositivos de áudio" Style="{StaticResource SectionTitle}" />
+                    </StackPanel>
+                    <TextBlock Text="Escolha o microfone de entrada e a saída virtual para injeção."
+                               Style="{StaticResource Caption}" Margin="0,0,0,18" />
+
+                    <!-- Status VB-Cable -->
+                    <Border CornerRadius="10" Padding="14,12" Margin="0,0,0,18">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#1E2E22" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CableDetected}" Value="False">
+                                        <Setter Property="Background" Value="#33281A" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource IconFont}" FontSize="18" VerticalAlignment="Center"
+                                       Margin="0,0,12,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="&#xE73E;" />
+                                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CableDetected}" Value="False">
+                                                <Setter Property="Text" Value="&#xE7BA;" />
+                                                <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="VB-Audio Virtual Cable detectado" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CableDetected}" Value="False">
+                                                    <Setter Property="Text" Value="VB-Cable não encontrado" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Margin="0,2,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+                                            <Setter Property="Text" Value="Pronto para injetar áudio no microfone." />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CableDetected}" Value="False">
+                                                    <Setter Property="Text" Value="Instale em vb-audio.com/Cable e selecione &quot;CABLE Input&quot; como saída." />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                            <Button Style="{StaticResource IconButton}" Content="&#xE72C;" HorizontalAlignment="Right"
+                                    Command="{Binding RefreshDevicesCommand}" ToolTip="Atualizar dispositivos"
+                                    Margin="16,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="MICROFONE (ENTRADA)" Style="{StaticResource FieldLabel}" />
+                    <ComboBox Style="{StaticResource AppComboBox}" ItemContainerStyle="{StaticResource AppComboItem}"
+                              ItemsSource="{Binding MicDevices}" SelectedItem="{Binding SelectedMic}" />
+
+                    <TextBlock Text="SAÍDA VIRTUAL — CABLE INPUT (INJEÇÃO)" Style="{StaticResource FieldLabel}" Margin="2,16,0,7" />
+                    <ComboBox Style="{StaticResource AppComboBox}" ItemContainerStyle="{StaticResource AppComboItem}"
+                              ItemsSource="{Binding OutputDevices}" SelectedItem="{Binding SelectedOutput}" />
+
+                    <TextBlock Text="MONITORAMENTO LOCAL — FONES" Style="{StaticResource FieldLabel}" Margin="2,16,0,7" />
+                    <ComboBox Style="{StaticResource AppComboBox}" ItemContainerStyle="{StaticResource AppComboItem}"
+                              ItemsSource="{Binding MonitorDevices}" SelectedItem="{Binding SelectedMonitor}" />
+                </StackPanel>
+            </Border>
+
+            <!-- ===== Volumes ===== -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                        <TextBlock Text="&#xE767;" Style="{StaticResource Glyph}" FontSize="18"
+                                   Foreground="{StaticResource AccentBrush}" Margin="0,0,10,0" />
+                        <TextBlock Text="Volumes" Style="{StaticResource SectionTitle}" />
+                    </StackPanel>
+
+                    <Grid Margin="0,0,0,4">
+                        <TextBlock Text="Microfone" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="{Binding MicVolume, Converter={StaticResource VolToPercent}}"
+                                   Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                    </Grid>
+                    <Slider Style="{StaticResource AppSlider}" Minimum="0" Maximum="2" Value="{Binding MicVolume, Mode=TwoWay}" />
+
+                    <Grid Margin="0,18,0,4">
+                        <TextBlock Text="Soundboard (master)" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="{Binding SoundboardVolume, Converter={StaticResource VolToPercent}}"
+                                   Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                    </Grid>
+                    <Slider Style="{StaticResource AppSlider}" Minimum="0" Maximum="2" Value="{Binding SoundboardVolume, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+
+            <!-- ===== Microfone ===== -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <TextBlock Text="&#xE720;" Style="{StaticResource Glyph}" FontSize="18"
+                                   Foreground="{StaticResource AccentBrush}" Margin="0,0,10,0" />
+                        <TextBlock Text="Microfone" Style="{StaticResource SectionTitle}" />
+                    </StackPanel>
+                    <TextBlock Text="Tratamento aplicado apenas ao seu microfone — os sons do soundboard não são afetados."
+                               Style="{StaticResource Caption}" Margin="0,0,0,18" />
+
+                    <Grid Margin="0,0,0,16" IsEnabled="{Binding NoiseSuppressionAvailable}">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Supressão de ruído (RNNoise)" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
+                            <TextBlock Margin="0,2,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+                                        <Setter Property="Text" Value="Remove ruído de fundo (ventilador, teclado, chiado) com rede neural, mesmo enquanto você fala." />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding NoiseSuppressionAvailable}" Value="False">
+                                                <Setter Property="Text" Value="Indisponível: a biblioteca nativa não carregou neste sistema." />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding NoiseSuppressionEnabled, Mode=TwoWay}" />
+                    </Grid>
+                    <Separator Background="{StaticResource BorderBrush}" Margin="0,0,0,16" />
+
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Noise gate" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
+                            <TextBlock Text="Silencia o microfone por completo quando o volume fica abaixo do limiar (pausas na fala)." Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding NoiseGateEnabled, Mode=TwoWay}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ===== Tecla de pânico ===== -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <TextBlock Text="&#xE71A;" Style="{StaticResource Glyph}" FontSize="18"
+                                   Foreground="{StaticResource DangerBrush}" Margin="0,0,10,0" />
+                        <TextBlock Text="Tecla de pânico" Style="{StaticResource SectionTitle}" />
+                    </StackPanel>
+                    <TextBlock Text="Atalho global que interrompe imediatamente todos os sons em reprodução."
+                               Style="{StaticResource Caption}" Margin="0,0,0,16" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Height="46" CornerRadius="9" Background="{StaticResource BgBaseBrush}"
+                                BorderThickness="1.5">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding GravandoPanico}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                                            <Setter Property="Background" Value="#2E1D22" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <TextBlock Text="Pressione a combinação…" Foreground="{StaticResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Visibility="{Binding GravandoPanico, Converter={StaticResource BoolToVis}}" />
+                                <Grid Visibility="{Binding GravandoPanico, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+                                    <Border Background="{StaticResource CardHoverBrush}" CornerRadius="7" Padding="12,5"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Visibility="{Binding PanicKey, Converter={StaticResource StringToVis}}">
+                                        <TextBlock Text="{Binding PanicKey}" Foreground="{StaticResource TextPrimaryBrush}"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="46" Margin="10,0,0,0"
+                                Command="{Binding ToggleGravacaoPanicoCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE765;" FontFamily="{StaticResource IconFont}" FontSize="16"
+                                           VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Gravar" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding GravandoPanico}" Value="True">
+                                                    <Setter Property="Text" Value="Cancelar" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Button Grid.Column="2" Style="{StaticResource IconButton}" Width="46" Height="46" Margin="6,0,0,0"
+                                Content="&#xE74D;" Command="{Binding LimparPanicoCommand}" ToolTip="Remover tecla de pânico" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ===== Sistema ===== -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                        <TextBlock Text="&#xE713;" Style="{StaticResource Glyph}" FontSize="18"
+                                   Foreground="{StaticResource AccentBrush}" Margin="0,0,10,0" />
+                        <TextBlock Text="Sistema" Style="{StaticResource SectionTitle}" />
+                    </StackPanel>
+
+                    <Grid Margin="0,0,0,16">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Monitoramento local" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
+                            <TextBlock Text="Ouvir os sons também nos fones enquanto injeta." Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding MonitorEnabled, Mode=TwoWay}" />
+                    </Grid>
+                    <Separator Background="{StaticResource BorderBrush}" Margin="0,0,0,16" />
+
+                    <Grid Margin="0,0,0,16">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Iniciar injeção ao abrir" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
+                            <TextBlock Text="Liga o motor de áudio automaticamente." Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding AutoStartEngine, Mode=TwoWay}" />
+                    </Grid>
+                    <Separator Background="{StaticResource BorderBrush}" Margin="0,0,0,16" />
+
+                    <Grid Margin="0,0,0,16">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Iniciar com o Windows" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
+                            <TextBlock Text="Abre o app no login (registro HKCU\...\Run)." Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding StartWithWindows, Mode=TwoWay}" />
+                    </Grid>
+                    <Separator Background="{StaticResource BorderBrush}" Margin="0,0,0,16" />
+
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Minimizar para a bandeja" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
+                            <TextBlock Text="Fechar a janela mantém o app rodando na tray." Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding MinimizeToTray, Mode=TwoWay}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

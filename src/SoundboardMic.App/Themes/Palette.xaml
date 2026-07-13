@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- ==== Fonte de ícones (nativa do Windows 11/10) ==== -->
+    <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <!-- ==== Superfícies (tema escuro Fluent) ==== -->
+    <Color x:Key="BgBaseColor">#181820</Color>
+    <Color x:Key="BgLayerColor">#20202B</Color>
+    <Color x:Key="CardColor">#282833</Color>
+    <Color x:Key="CardHoverColor">#31313F</Color>
+    <Color x:Key="BorderColor">#3A3A48</Color>
+    <Color x:Key="BorderStrongColor">#4A4A5A</Color>
+
+    <SolidColorBrush x:Key="BgBaseBrush" Color="{StaticResource BgBaseColor}" />
+    <SolidColorBrush x:Key="BgLayerBrush" Color="{StaticResource BgLayerColor}" />
+    <SolidColorBrush x:Key="CardBrush" Color="{StaticResource CardColor}" />
+    <SolidColorBrush x:Key="CardHoverBrush" Color="{StaticResource CardHoverColor}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrongColor}" />
+
+    <!-- ==== Texto ==== -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F4F4F8" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9A9AAE" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#6B6B7E" />
+
+    <!-- ==== Destaque (violeta → azul) ==== -->
+    <Color x:Key="AccentColor">#7C5CFF</Color>
+    <Color x:Key="AccentDeepColor">#6039E8</Color>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentDeepBrush" Color="{StaticResource AccentDeepColor}" />
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#8B6BFF" />
+        <GradientStop Offset="1" Color="#5B8DEF" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentGradientHoverBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#9C80FF" />
+        <GradientStop Offset="1" Color="#6D9BFF" />
+    </LinearGradientBrush>
+
+    <!-- ==== Estados ==== -->
+    <SolidColorBrush x:Key="SuccessBrush" Color="#3DD68C" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#FF5C6C" />
+    <SolidColorBrush x:Key="DangerHoverBrush" Color="#FF7480" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#FFB454" />
+    <SolidColorBrush x:Key="IdleBrush" Color="#5A5A6E" />
+
+    <!-- ==== Métricas ==== -->
+    <sys:Double x:Key="RadiusCard">14</sys:Double>
+    <CornerRadius x:Key="CornerCard">14</CornerRadius>
+    <CornerRadius x:Key="CornerControl">9</CornerRadius>
+    <CornerRadius x:Key="CornerPill">20</CornerRadius>
+
+</ResourceDictionary>

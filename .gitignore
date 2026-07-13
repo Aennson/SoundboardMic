@@ -1,0 +1,16 @@
+# Build
+bin/
+obj/
+dist/
+*.user
+
+# IDE
+.vs/
+.idea/
+*.suo
+
+# Logs / dados locais
+*.log
+
+# Publicação
+publish/

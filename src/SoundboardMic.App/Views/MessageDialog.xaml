@@ -1,0 +1,36 @@
+<Window x:Class="SoundboardMic.App.Views.MessageDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SoundboardMic" SizeToContent="Height" Width="440"
+        WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
+        AllowsTransparency="True" Background="Transparent"
+        FontFamily="{StaticResource AppFont}">
+
+    <Border Background="{StaticResource BgLayerBrush}" CornerRadius="16"
+            BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="30" ShadowDepth="8" Opacity="0.55" Color="Black" />
+        </Border.Effect>
+        <StackPanel Margin="28">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                <Border x:Name="IconHost" Width="40" Height="40" CornerRadius="10"
+                        Background="{StaticResource CardHoverBrush}" VerticalAlignment="Center">
+                    <TextBlock x:Name="IconGlyph" Style="{StaticResource Glyph}" FontSize="18"
+                               Foreground="{StaticResource AccentBrush}" />
+                </Border>
+                <TextBlock x:Name="TitleText" Style="{StaticResource H2}" FontSize="18"
+                           VerticalAlignment="Center" Margin="14,0,0,0" />
+            </StackPanel>
+
+            <TextBlock x:Name="MessageText" Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap" FontSize="14" LineHeight="21" Margin="2,0,0,0" />
+
+            <StackPanel x:Name="ButtonBar" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButton}" Content="Cancelar"
+                        Width="120" Click="Cancel_Click" />
+                <Button x:Name="BtnOk" Style="{StaticResource PrimaryButton}" Content="Confirmar"
+                        Width="140" Margin="10,0,0,0" Click="Ok_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

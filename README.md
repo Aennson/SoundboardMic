@@ -20,6 +20,9 @@ Construído em **.NET 8 / WPF** com **NAudio** (WASAPI), **SQLite** e hook globa
 - 🎧 **Monitoramento local**: ouça os sons também nos seus fones enquanto injeta.
 - 🤫 **Supressão de ruído do microfone**: RNNoise (rede neural) e/ou noise gate,
   cada um com liga/desliga próprio — só o mic é tratado, os sons ficam intactos.
+- 🧲 **Barra rápida flutuante**: janela sempre visível (vertical ou horizontal) com
+  um botão colorido por som — dispara sem roubar o foco do jogo/chamada, cabe na
+  altura da taskbar e tem pânico discreto na ponta. Ícone e cor customizáveis por áudio.
 - 🎛️ Seleção de dispositivos (mic, saída virtual, fones), volumes de mic vs. soundboard.
 - 🗂️ **Bandeja do sistema** — hotkeys continuam ativas com a janela fechada.
 - 🚀 Iniciar com o Windows, indicadores de status e detecção do VB-Cable.

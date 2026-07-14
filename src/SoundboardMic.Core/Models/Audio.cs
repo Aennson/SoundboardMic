@@ -19,6 +19,12 @@ public class Audio
     /// <summary>Volume individual do áudio (0.0 a 2.0; 1.0 = original).</summary>
     public double VolumePadrao { get; set; } = 1.0;
 
+    /// <summary>Code-point hex do glifo na barra rápida (Segoe Fluent), ex. "E8D6". Null = padrão.</summary>
+    public string? Icone { get; set; }
+
+    /// <summary>Cor de fundo do botão na barra rápida ("#RRGGBB"). Null = padrão.</summary>
+    public string? Cor { get; set; }
+
     /// <summary>Data/hora de criação em UTC.</summary>
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 }

@@ -9,5 +9,8 @@
     <conv:VolumeToPercentConverter x:Key="VolToPercent" />
     <conv:BoolToBrushConverter x:Key="BoolToBrush" />
     <conv:SliderFillConverter x:Key="SliderFill" />
+    <conv:CodepointToGlyphConverter x:Key="CodepointToGlyph" />
+    <conv:HexToBrushConverter x:Key="HexToBrush" />
+    <conv:IsEqualConverter x:Key="IsEqual" />
 
 </ResourceDictionary>

@@ -18,6 +18,9 @@ public interface IMicInjectionEngine : IDisposable
     /// <summary>Quantidade de sons do soundboard tocando agora.</summary>
     int ActiveSoundCount { get; }
 
+    /// <summary>Snapshot dos caminhos dos sons tocando agora no mix principal (sem duplicar o monitor).</summary>
+    IReadOnlyList<string> GetActiveSoundPaths();
+
     /// <summary>Volume do microfone no mix (0.0 a 2.0). Ajustável em tempo real.</summary>
     float MicVolume { get; set; }
 

@@ -133,6 +133,29 @@ public class SoundboardControllerTests : IDisposable
     }
 
     [Fact]
+    public void GetStatus_ComSonsTocando_ExpoeOsCaminhos()
+    {
+        _engine.PlaySound(@"C:\sons\a.mp3");
+        _engine.PlaySound(@"C:\sons\b.mp3");
+        _engine.PlaySound(@"C:\sons\a.mp3"); // repetido não duplica
+
+        var status = _controller.GetStatus();
+
+        Assert.Equal(2, status.ActiveSoundPaths.Count);
+        Assert.Contains(@"C:\sons\a.mp3", status.ActiveSoundPaths);
+        Assert.Contains(@"C:\sons\b.mp3", status.ActiveSoundPaths);
+    }
+
+    [Fact]
+    public void GetStatus_AposStopAllSounds_ListaVazia()
+    {
+        _engine.PlaySound(@"C:\sons\a.mp3");
+        _controller.StopAllSounds();
+
+        Assert.Empty(_controller.GetStatus().ActiveSoundPaths);
+    }
+
+    [Fact]
     public void StartEngine_PassaTogglesDeRuidoDoSettingsNasOptions()
     {
         _settings.Current.NoiseSuppressionEnabled = true;
@@ -184,6 +207,9 @@ public class SoundboardControllerTests : IDisposable
         public bool Running { get; set; }
         public bool IsRunning => Running;
         public int ActiveSoundCount => Played.Count;
+
+        public IReadOnlyList<string> GetActiveSoundPaths() =>
+            Played.Select(p => p.Path).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         public float MicVolume { get; set; } = 1f;
         public float SoundboardVolume { get; set; } = 1f;
         public bool MonitorEnabled { get; set; }

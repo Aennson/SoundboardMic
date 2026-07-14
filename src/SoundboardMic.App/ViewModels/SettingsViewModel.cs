@@ -17,6 +17,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IAudioDeviceService _devices;
     private readonly IStartupService _startup;
     private readonly SoundboardController _controller;
+    private readonly QuickBarService _quickBar;
 
     private bool _loading;
 
@@ -24,14 +25,27 @@ public partial class SettingsViewModel : ObservableObject
         ISettingsService settings,
         IAudioDeviceService devices,
         IStartupService startup,
-        SoundboardController controller)
+        SoundboardController controller,
+        QuickBarService quickBar)
     {
         _settings = settings;
         _devices = devices;
         _startup = startup;
         _controller = controller;
+        _quickBar = quickBar;
         RefreshDevices();
         LoadFromSettings();
+
+        // Reflete toggles vindos da tray ou do menu da própria barra.
+        _quickBar.VisibilidadeAlterada += (_, visivel) =>
+        {
+            if (QuickBarVisible != visivel)
+            {
+                _loading = true;
+                QuickBarVisible = visivel;
+                _loading = false;
+            }
+        };
     }
 
     public ObservableCollection<DeviceOption> MicDevices { get; } = new();
@@ -51,6 +65,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private bool _autoStartEngine = true;
     [ObservableProperty] private bool _startWithWindows;
     [ObservableProperty] private bool _minimizeToTray = true;
+    [ObservableProperty] private bool _quickBarVisible;
 
     [ObservableProperty] private string _panicKey = string.Empty;
     [ObservableProperty] private bool _gravandoPanico;
@@ -75,6 +90,7 @@ public partial class SettingsViewModel : ObservableObject
         NoiseSuppressionAvailable = _controller.NoiseSuppressionAvailable;
         AutoStartEngine = s.AutoStartEngine;
         MinimizeToTray = s.MinimizeToTray;
+        QuickBarVisible = s.QuickBarVisible;
         PanicKey = s.PanicKey ?? string.Empty;
         StartWithWindows = _startup.IsEnabled();
 
@@ -126,6 +142,16 @@ public partial class SettingsViewModel : ObservableObject
     }
     partial void OnAutoStartEngineChanged(bool value) => Persist(s => s.AutoStartEngine = value);
     partial void OnMinimizeToTrayChanged(bool value) => Persist(s => s.MinimizeToTray = value);
+
+    partial void OnQuickBarVisibleChanged(bool value)
+    {
+        if (_loading) return;
+        // O serviço persiste e mostra/oculta a janela.
+        if (value)
+            _quickBar.Mostrar();
+        else
+            _quickBar.Ocultar();
+    }
 
     partial void OnMicVolumeChanged(double value)
     {

@@ -178,6 +178,46 @@
         </Setter>
     </Style>
 
+    <!-- Botão de áudio da barra rápida (fundo = cor do áudio, via Background) -->
+    <Style x:Key="QuickBarButton" TargetType="Button">
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="2" />
+        <Setter Property="ToolTipService.InitialShowDelay" Value="300" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8"
+                            BorderBrush="Transparent" BorderThickness="1.5">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.85" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="bd" Property="RenderTransform">
+                                <Setter.Value><ScaleTransform ScaleX="0.9" ScaleY="0.9" /></Setter.Value>
+                            </Setter>
+                            <Setter TargetName="bd" Property="RenderTransformOrigin" Value="0.5,0.5" />
+                        </Trigger>
+                        <!-- Destaque enquanto o áudio está tocando -->
+                        <DataTrigger Binding="{Binding Tocando}" Value="True">
+                            <Setter TargetName="bd" Property="BorderBrush" Value="White" />
+                            <Setter TargetName="bd" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="0" Color="White" Opacity="0.7" />
+                                </Setter.Value>
+                            </Setter>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ============ TextBox ============ -->
     <Style x:Key="AppTextBox" TargetType="TextBox">
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />

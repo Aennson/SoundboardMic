@@ -40,4 +40,14 @@ public class AppSettings
 
     /// <summary>Minimizar para a bandeja em vez de fechar.</summary>
     public bool MinimizeToTray { get; set; } = true;
+
+    /// <summary>Se a barra rápida flutuante está visível.</summary>
+    public bool QuickBarVisible { get; set; }
+
+    /// <summary>Orientação da barra rápida: "Horizontal" ou "Vertical".</summary>
+    public string QuickBarOrientation { get; set; } = "Horizontal";
+
+    /// <summary>Posição salva da barra rápida (null = default no canto inferior esquerdo).</summary>
+    public double? QuickBarLeft { get; set; }
+    public double? QuickBarTop { get; set; }
 }

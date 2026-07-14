@@ -19,14 +19,16 @@ public class AudioRepository : IAudioRepository
         await using var connection = await _factory.OpenAsync(ct);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO Audios (Nome, CaminhoArquivo, DuracaoMs, VolumePadrao, CriadoEm)
-            VALUES ($nome, $caminho, $duracao, $volume, $criadoEm)
+            INSERT INTO Audios (Nome, CaminhoArquivo, DuracaoMs, VolumePadrao, Icone, Cor, CriadoEm)
+            VALUES ($nome, $caminho, $duracao, $volume, $icone, $cor, $criadoEm)
             RETURNING Id;
             """;
         command.Parameters.AddWithValue("$nome", audio.Nome);
         command.Parameters.AddWithValue("$caminho", audio.CaminhoArquivo);
         command.Parameters.AddWithValue("$duracao", audio.DuracaoMs);
         command.Parameters.AddWithValue("$volume", audio.VolumePadrao);
+        command.Parameters.AddWithValue("$icone", (object?)audio.Icone ?? DBNull.Value);
+        command.Parameters.AddWithValue("$cor", (object?)audio.Cor ?? DBNull.Value);
         command.Parameters.AddWithValue("$criadoEm", ToIso(audio.CriadoEm));
 
         audio.Id = (long)(await command.ExecuteScalarAsync(ct))!;
@@ -66,13 +68,16 @@ public class AudioRepository : IAudioRepository
         await using var command = connection.CreateCommand();
         command.CommandText = """
             UPDATE Audios
-            SET Nome = $nome, CaminhoArquivo = $caminho, DuracaoMs = $duracao, VolumePadrao = $volume
+            SET Nome = $nome, CaminhoArquivo = $caminho, DuracaoMs = $duracao,
+                VolumePadrao = $volume, Icone = $icone, Cor = $cor
             WHERE Id = $id;
             """;
         command.Parameters.AddWithValue("$nome", audio.Nome);
         command.Parameters.AddWithValue("$caminho", audio.CaminhoArquivo);
         command.Parameters.AddWithValue("$duracao", audio.DuracaoMs);
         command.Parameters.AddWithValue("$volume", audio.VolumePadrao);
+        command.Parameters.AddWithValue("$icone", (object?)audio.Icone ?? DBNull.Value);
+        command.Parameters.AddWithValue("$cor", (object?)audio.Cor ?? DBNull.Value);
         command.Parameters.AddWithValue("$id", audio.Id);
 
         return await command.ExecuteNonQueryAsync(ct) > 0;
@@ -89,7 +94,7 @@ public class AudioRepository : IAudioRepository
     }
 
     private const string SelectClause =
-        "SELECT Id, Nome, CaminhoArquivo, DuracaoMs, VolumePadrao, CriadoEm FROM Audios";
+        "SELECT Id, Nome, CaminhoArquivo, DuracaoMs, VolumePadrao, Icone, Cor, CriadoEm FROM Audios";
 
     private static Audio Map(SqliteDataReader reader) => new()
     {
@@ -98,7 +103,9 @@ public class AudioRepository : IAudioRepository
         CaminhoArquivo = reader.GetString(2),
         DuracaoMs = reader.GetInt64(3),
         VolumePadrao = reader.GetDouble(4),
-        CriadoEm = FromIso(reader.GetString(5)),
+        Icone = reader.IsDBNull(5) ? null : reader.GetString(5),
+        Cor = reader.IsDBNull(6) ? null : reader.GetString(6),
+        CriadoEm = FromIso(reader.GetString(7)),
     };
 
     internal static string ToIso(DateTime value) =>

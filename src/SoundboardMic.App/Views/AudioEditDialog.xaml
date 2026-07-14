@@ -6,10 +6,67 @@
         xmlns:vm="clr-namespace:SoundboardMic.App.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:AudioEditViewModel}"
-        Title="Editar áudio" Height="560" Width="520"
+        Title="Editar áudio" Height="700" Width="520"
         WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent"
         FontFamily="{StaticResource AppFont}">
+
+    <Window.Resources>
+        <!-- Quadradinho selecionável de glifo -->
+        <Style x:Key="IconChoice" TargetType="RadioButton">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Box" CornerRadius="8" Background="{StaticResource BgBaseBrush}"
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1.5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{StaticResource CardHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="Box" Property="Background" Value="#231F3A" />
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Bolinha selecionável de cor (Background vem do binding) -->
+        <Style x:Key="ColorChoice" TargetType="RadioButton">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="Margin" Value="0,0,8,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid>
+                            <Ellipse x:Name="Ring" Stroke="Transparent" StrokeThickness="2" Margin="0" />
+                            <Ellipse Fill="{TemplateBinding Background}" Margin="4" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Ring" Property="Stroke" Value="{StaticResource BorderStrongBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Ring" Property="Stroke" Value="{StaticResource TextPrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
     <Border Background="{StaticResource BgLayerBrush}" CornerRadius="16"
             BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
@@ -27,9 +84,12 @@
             <!-- Cabeçalho -->
             <Grid Grid.Row="0" Margin="0,0,0,20">
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="42" Height="42" CornerRadius="11" Background="{StaticResource AccentGradientBrush}"
+                    <!-- Preview vivo do ícone/cor escolhidos -->
+                    <Border Width="42" Height="42" CornerRadius="11"
+                            Background="{Binding Cor, Converter={StaticResource HexToBrush}}"
                             VerticalAlignment="Center">
-                        <TextBlock Text="&#xE8D6;" Style="{StaticResource Glyph}" FontSize="20" Foreground="White" />
+                        <TextBlock Text="{Binding Icone, Converter={StaticResource CodepointToGlyph}}"
+                                   Style="{StaticResource Glyph}" FontSize="20" Foreground="White" />
                     </Border>
                     <TextBlock Text="{Binding Titulo}" Style="{StaticResource H1}" Margin="14,0,0,0"
                                VerticalAlignment="Center" />
@@ -40,7 +100,8 @@
             </Grid>
 
             <!-- Conteúdo -->
-            <StackPanel Grid.Row="1">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
 
                 <TextBlock Text="NOME" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="2,0,0,6" />
                 <TextBox Style="{StaticResource AppTextBox}"
@@ -90,6 +151,57 @@
                     <Button Grid.Column="2" Style="{StaticResource PlayButton}" Width="40" Height="40" Margin="12,0,0,0"
                             Command="{Binding PreviewCommand}" Content="&#xE768;" ToolTip="Ouvir prévia (nos fones)" />
                 </Grid>
+
+                <!-- Ícone e cor (barra rápida) -->
+                <TextBlock Text="ÍCONE E COR (BARRA RÁPIDA)" Style="{StaticResource Caption}" FontWeight="SemiBold"
+                           Margin="2,20,0,6" />
+                <ItemsControl ItemsSource="{Binding Glifos}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton GroupName="IconeAudio" Style="{StaticResource IconChoice}"
+                                         ToolTip="{Binding Nome}"
+                                         Command="{Binding DataContext.SelecionarIconeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                         CommandParameter="{Binding Codigo}">
+                                <RadioButton.IsChecked>
+                                    <MultiBinding Converter="{StaticResource IsEqual}" Mode="OneWay">
+                                        <Binding Path="DataContext.Icone" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                        <Binding Path="Codigo" />
+                                    </MultiBinding>
+                                </RadioButton.IsChecked>
+                                <TextBlock Text="{Binding Codigo, Converter={StaticResource CodepointToGlyph}}"
+                                           FontFamily="{StaticResource IconFont}" FontSize="15" />
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <ItemsControl ItemsSource="{Binding Cores}" Margin="0,6,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton GroupName="CorAudio" Style="{StaticResource ColorChoice}"
+                                         ToolTip="{Binding Nome}"
+                                         Background="{Binding Hex, Converter={StaticResource HexToBrush}}"
+                                         Command="{Binding DataContext.SelecionarCorCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                         CommandParameter="{Binding Hex}">
+                                <RadioButton.IsChecked>
+                                    <MultiBinding Converter="{StaticResource IsEqual}" Mode="OneWay">
+                                        <Binding Path="DataContext.Cor" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                        <Binding Path="Hex" />
+                                    </MultiBinding>
+                                </RadioButton.IsChecked>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
                 <!-- Atalho -->
                 <TextBlock Text="ATALHO (TECLA DE DISPARO)" Style="{StaticResource Caption}" FontWeight="SemiBold"
@@ -192,6 +304,7 @@
                     </StackPanel>
                 </Border>
             </StackPanel>
+            </ScrollViewer>
 
             <!-- Rodapé -->
             <Grid Grid.Row="2" Margin="0,24,0,0">

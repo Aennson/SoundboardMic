@@ -23,6 +23,12 @@ public partial class AudioItemViewModel : ObservableObject
     public string CaminhoArquivo => Audio.CaminhoArquivo;
     public string NomeArquivo => System.IO.Path.GetFileName(Audio.CaminhoArquivo);
 
+    /// <summary>Code-point hex do glifo na barra rápida (null = padrão).</summary>
+    public string? Icone => Audio.Icone;
+
+    /// <summary>Cor de fundo do botão na barra rápida (null = padrão).</summary>
+    public string? Cor => Audio.Cor;
+
     /// <summary>Atalho legível ou vazio (a UI mostra um chip cinza "sem atalho").</summary>
     public string Teclas => Mapeamento?.Teclas ?? string.Empty;
 

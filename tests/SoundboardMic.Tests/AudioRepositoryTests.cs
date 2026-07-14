@@ -36,6 +36,53 @@ public class AudioRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task Add_ComIconeECor_FazRoundTrip()
+    {
+        var audio = NovoAudio();
+        audio.Icone = "E767";
+        audio.Cor = "#3DD68C";
+
+        await _repo.AddAsync(audio);
+        var lido = await _repo.GetByIdAsync(audio.Id);
+
+        Assert.Equal("E767", lido!.Icone);
+        Assert.Equal("#3DD68C", lido.Cor);
+    }
+
+    [Fact]
+    public async Task Add_SemIconeECor_RetornaNull()
+    {
+        var audio = await _repo.AddAsync(NovoAudio());
+        var lido = await _repo.GetByIdAsync(audio.Id);
+
+        Assert.Null(lido!.Icone);
+        Assert.Null(lido.Cor);
+    }
+
+    [Fact]
+    public async Task Update_AlteraIconeECor()
+    {
+        var audio = await _repo.AddAsync(NovoAudio());
+
+        audio.Icone = "E945";
+        audio.Cor = "#FF5C6C";
+        Assert.True(await _repo.UpdateAsync(audio));
+
+        var lido = await _repo.GetByIdAsync(audio.Id);
+        Assert.Equal("E945", lido!.Icone);
+        Assert.Equal("#FF5C6C", lido.Cor);
+
+        // Voltar ao padrão (null) também persiste.
+        audio.Icone = null;
+        audio.Cor = null;
+        await _repo.UpdateAsync(audio);
+
+        lido = await _repo.GetByIdAsync(audio.Id);
+        Assert.Null(lido!.Icone);
+        Assert.Null(lido.Cor);
+    }
+
+    [Fact]
     public async Task Add_SemNome_Lanca()
     {
         var audio = NovoAudio();

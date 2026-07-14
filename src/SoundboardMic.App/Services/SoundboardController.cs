@@ -13,6 +13,7 @@ public class SoundboardStatus
     public bool EngineRunning { get; init; }
     public bool CableDetected { get; init; }
     public int ActiveSounds { get; init; }
+    public IReadOnlyList<string> ActiveSoundPaths { get; init; } = Array.Empty<string>();
     public string? OutputDeviceName { get; init; }
     public string? MicDeviceName { get; init; }
 }
@@ -210,6 +211,7 @@ public class SoundboardController : IDisposable
             EngineRunning = _engine.IsRunning,
             CableDetected = cable is not null,
             ActiveSounds = _engine.ActiveSoundCount,
+            ActiveSoundPaths = _engine.GetActiveSoundPaths(),
             OutputDeviceName = outputName,
             MicDeviceName = micName,
         };

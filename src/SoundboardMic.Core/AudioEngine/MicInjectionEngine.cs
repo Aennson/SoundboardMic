@@ -63,7 +63,8 @@ public class MicInjectionEngine : IMicInjectionEngine
     private bool _isRunning;
     private bool _stopping;
 
-    private sealed record ActiveSound(ISampleProvider Input, WaveStream Reader, MixingSampleProvider Owner);
+    private sealed record ActiveSound(
+        ISampleProvider Input, WaveStream Reader, MixingSampleProvider Owner, string FilePath);
 
     private readonly List<ActiveSound> _activeSounds = new();
 
@@ -80,6 +81,17 @@ public class MicInjectionEngine : IMicInjectionEngine
             lock (_lock)
                 return _activeSounds.Count(s => ReferenceEquals(s.Owner, _soundMixer));
         }
+    }
+
+    public IReadOnlyList<string> GetActiveSoundPaths()
+    {
+        // Sons do monitor duplicam o mesmo disparo; considera só os do mix principal.
+        lock (_lock)
+            return _activeSounds
+                .Where(s => ReferenceEquals(s.Owner, _soundMixer))
+                .Select(s => s.FilePath)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
     }
 
     public float MicVolume
@@ -322,7 +334,7 @@ public class MicInjectionEngine : IMicInjectionEngine
                 AudioFileDecoder.ToSampleProvider(reader), MixFormat);
             var input = new VolumeSampleProvider(chain) { Volume = Math.Clamp(volume, 0f, 2f) };
 
-            _activeSounds.Add(new ActiveSound(input, reader, mixer));
+            _activeSounds.Add(new ActiveSound(input, reader, mixer, filePath));
             mixer.AddMixerInput((ISampleProvider)input);
         }
         catch

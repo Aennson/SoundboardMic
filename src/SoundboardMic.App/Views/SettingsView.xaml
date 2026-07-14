@@ -284,13 +284,23 @@
                     </Grid>
                     <Separator Background="{StaticResource BorderBrush}" Margin="0,0,0,16" />
 
-                    <Grid>
+                    <Grid Margin="0,0,0,16">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Minimizar para a bandeja" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
                             <TextBlock Text="Fechar a janela mantém o app rodando na tray." Style="{StaticResource Caption}" Margin="0,2,0,0" />
                         </StackPanel>
                         <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
                                       IsChecked="{Binding MinimizeToTray, Mode=TwoWay}" />
+                    </Grid>
+                    <Separator Background="{StaticResource BorderBrush}" Margin="0,0,0,16" />
+
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Barra rápida flutuante" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
+                            <TextBlock Text="Barra sempre visível com um botão por som, para disparo rápido." Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding QuickBarVisible, Mode=TwoWay}" />
                     </Grid>
                 </StackPanel>
             </Border>

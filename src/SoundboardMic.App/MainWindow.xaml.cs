@@ -75,7 +75,7 @@ public partial class MainWindow : Window
         Application.Current.Shutdown();
     }
 
-    private void RestoreFromTray()
+    public void RestoreFromTray()
     {
         Show();
         WindowState = WindowState.Normal;

@@ -47,7 +47,14 @@ public partial class AudioEditViewModel : ObservableObject
             _volume = editing.Audio.VolumePadrao;
             _teclas = editing.Mapeamento?.Teclas ?? string.Empty;
         }
+
+        // Null (legado/novo) vira o padrão do catálogo — a UI sempre tem uma seleção.
+        _icone = editing?.Audio.Icone ?? IconCatalog.GlifoPadrao;
+        _cor = editing?.Audio.Cor ?? IconCatalog.CorPadrao;
     }
+
+    public IReadOnlyList<IconOption> Glifos => IconCatalog.Glifos;
+    public IReadOnlyList<CorOption> Cores => IconCatalog.Cores;
 
     public bool IsEdicao => _existing is not null;
     public string Titulo => IsEdicao ? "Editar áudio" : "Novo áudio";
@@ -67,6 +74,14 @@ public partial class AudioEditViewModel : ObservableObject
 
     [ObservableProperty]
     private double _volume = 1.0;
+
+    /// <summary>Code-point hex do glifo na barra rápida ("E8D6"). Null = padrão.</summary>
+    [ObservableProperty]
+    private string? _icone;
+
+    /// <summary>Cor de fundo do botão na barra rápida ("#RRGGBB"). Null = padrão.</summary>
+    [ObservableProperty]
+    private string? _cor;
 
     /// <summary>Atalho gravado (canônico) ou vazio.</summary>
     [ObservableProperty]
@@ -89,6 +104,12 @@ public partial class AudioEditViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(Nome) && !string.IsNullOrEmpty(value))
             Nome = System.IO.Path.GetFileNameWithoutExtension(value);
     }
+
+    [RelayCommand]
+    private void SelecionarIcone(string? codigo) => Icone = codigo;
+
+    [RelayCommand]
+    private void SelecionarCor(string? hex) => Cor = hex;
 
     [RelayCommand]
     private void PickFile()
@@ -198,6 +219,8 @@ public partial class AudioEditViewModel : ObservableObject
             audio.CaminhoArquivo = CaminhoArquivo;
             audio.VolumePadrao = Volume;
             audio.DuracaoMs = duracao;
+            audio.Icone = Icone;
+            audio.Cor = Cor;
 
             if (_existing is null)
                 await _audioRepo.AddAsync(audio);

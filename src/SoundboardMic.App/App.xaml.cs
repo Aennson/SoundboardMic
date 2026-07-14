@@ -49,6 +49,9 @@ public partial class App : Application
             window.Show();
 
             await window.ViewModel.InitializeAsync();
+
+            // Reabre a barra rápida se ela estava visível na última sessão.
+            _services.GetRequiredService<QuickBarService>().AplicarEstadoInicial();
         }
         catch (Exception ex)
         {
@@ -84,9 +87,12 @@ public partial class App : Application
         services.AddSingleton<SoundboardController>();
 
         // ViewModels + janelas
+        services.AddSingleton<QuickBarService>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
+        services.AddSingleton<QuickBarViewModel>();
+        services.AddSingleton<Views.QuickBarWindow>();
 
         return services.BuildServiceProvider();
     }

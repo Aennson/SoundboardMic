@@ -18,6 +18,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly SoundboardController _controller;
     private readonly ISettingsService _settings;
+    private readonly QuickBarService _quickBar;
     private readonly Dispatcher _dispatcher = Application.Current.Dispatcher;
 
     public MainViewModel(
@@ -27,6 +28,7 @@ public partial class MainViewModel : ObservableObject
         IDialogService dialogs,
         SoundboardController controller,
         ISettingsService settings,
+        QuickBarService quickBar,
         SettingsViewModel settingsViewModel)
     {
         _services = services;
@@ -35,6 +37,7 @@ public partial class MainViewModel : ObservableObject
         _dialogs = dialogs;
         _controller = controller;
         _settings = settings;
+        _quickBar = quickBar;
         Settings = settingsViewModel;
 
         _controller.StatusChanged += (_, _) => _dispatcher.Invoke(UpdateStatus);
@@ -119,6 +122,10 @@ public partial class MainViewModel : ObservableObject
         ActiveSounds = status.ActiveSounds;
         OutputDeviceName = status.OutputDeviceName ?? "—";
         MicDeviceName = status.MicDeviceName ?? "—";
+
+        var tocando = new HashSet<string>(status.ActiveSoundPaths, StringComparer.OrdinalIgnoreCase);
+        foreach (var item in Audios)
+            item.Tocando = tocando.Contains(item.CaminhoArquivo);
     }
 
     private void MostrarErro(string mensagem)
@@ -147,12 +154,11 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Panico()
-    {
-        _controller.StopAllSounds();
-        foreach (var item in Audios)
-            item.Tocando = false;
-    }
+    private void AlternarQuickBar() => _quickBar.Alternar();
+
+    [RelayCommand]
+    private void Panico() => _controller.StopAllSounds();
+    // O stop-all dispara ActiveSoundsChanged → UpdateStatus limpa os flags Tocando.
 
     // ---- CRUD de áudios ----
     [RelayCommand]

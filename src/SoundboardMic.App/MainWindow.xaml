@@ -33,6 +33,7 @@
                         <Separator />
                         <MenuItem Header="Iniciar/Parar injeção" Command="{Binding ToggleEngineCommand}" />
                         <MenuItem Header="Pânico (parar sons)" Command="{Binding PanicoCommand}" />
+                        <MenuItem Header="Barra rápida" Command="{Binding AlternarQuickBarCommand}" />
                         <Separator />
                         <MenuItem Header="Sair" Click="TrayExit_Click" />
                     </ContextMenu>

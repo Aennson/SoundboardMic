@@ -58,6 +58,47 @@ public class VolumeToPercentConverter : IValueConverter
     public object ConvertBack(object value, Type t, object? p, CultureInfo c) => Binding.DoNothing;
 }
 
+/// <summary>Code-point hex ("E8D6") → caractere do glifo do Segoe Fluent (null → padrão).</summary>
+public class CodepointToGlyphConverter : IValueConverter
+{
+    public object Convert(object? value, Type t, object? p, CultureInfo c) =>
+        Services.IconCatalog.GlyphChar(value as string);
+
+    public object ConvertBack(object value, Type t, object? p, CultureInfo c) => Binding.DoNothing;
+}
+
+/// <summary>"#RRGGBB" → SolidColorBrush congelado (cacheado); null/inválido → cor padrão do catálogo.</summary>
+public class HexToBrushConverter : IValueConverter
+{
+    private static readonly Dictionary<string, SolidColorBrush> Cache = new(StringComparer.OrdinalIgnoreCase);
+
+    public object Convert(object? value, Type t, object? p, CultureInfo c)
+    {
+        var hex = value as string;
+        if (string.IsNullOrWhiteSpace(hex))
+            hex = Services.IconCatalog.CorPadrao;
+
+        lock (Cache)
+        {
+            if (Cache.TryGetValue(hex, out var cached))
+                return cached;
+            try
+            {
+                var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+                brush.Freeze();
+                Cache[hex] = brush;
+                return brush;
+            }
+            catch (FormatException)
+            {
+                return Brushes.Gray;
+            }
+        }
+    }
+
+    public object ConvertBack(object value, Type t, object? p, CultureInfo c) => Binding.DoNothing;
+}
+
 /// <summary>bool → um de dois brushes ("BrushTrue|BrushFalse" nos recursos). Usado em status.</summary>
 public class BoolToBrushConverter : IMultiValueConverter
 {
@@ -67,6 +108,21 @@ public class BoolToBrushConverter : IMultiValueConverter
         if (values.Length >= 3 && values[1] is Brush b1 && values[2] is Brush b2)
             return on ? b1 : b2;
         return Brushes.Gray;
+    }
+
+    public object[] ConvertBack(object value, Type[] t, object? p, CultureInfo c) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>true se os dois valores bindados forem iguais (strings, case-insensitive).</summary>
+public class IsEqualConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type t, object? p, CultureInfo c)
+    {
+        if (values.Length < 2) return false;
+        if (values[0] is string a && values[1] is string b)
+            return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+        return Equals(values[0], values[1]);
     }
 
     public object[] ConvertBack(object value, Type[] t, object? p, CultureInfo c) =>

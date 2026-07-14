@@ -186,6 +186,3 @@ saturar. Valores em torno de 80–100% costumam ser seguros.
 
 Projeto pessoal. O VB-Audio Virtual Cable é um software de terceiros com seus próprios termos
 (donationware) — veja <https://vb-audio.com/Cable/>.
-
-
-claude --resume 056a822c-8253-463a-b44b-5bfaf033becc

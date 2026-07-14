@@ -19,14 +19,39 @@ public partial class QuickBarWindow : Window
     private const long WsExNoActivate = 0x08000000;
     private const long WsExToolWindow = 0x00000080;
 
+    private const uint EventSystemForeground = 0x0003;
+    private static readonly IntPtr HwndTopmost = new(-1);
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoActivate = 0x0010;
+
+    private delegate void WinEventProc(
+        IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time);
+
     [DllImport("user32.dll", SetLastError = true)]
     private static extern long GetWindowLongPtrW(IntPtr hWnd, int nIndex);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern long SetWindowLongPtrW(IntPtr hWnd, int nIndex, long dwNewLong);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(
+        IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetWinEventHook(
+        uint eventMin, uint eventMax, IntPtr module, WinEventProc callback,
+        uint processId, uint threadId, uint flags);
+
+    [DllImport("user32.dll")]
+    private static extern bool UnhookWinEvent(IntPtr hook);
+
     private readonly QuickBarViewModel _vm;
     private readonly ISettingsService _settings;
+
+    // Mantém o delegate vivo enquanto o hook existir (senão o GC o coleta).
+    private WinEventProc? _foregroundCallback;
+    private IntPtr _foregroundHook;
 
     public QuickBarWindow(QuickBarViewModel viewModel, ISettingsService settings)
     {
@@ -35,6 +60,11 @@ public partial class QuickBarWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         Loaded += OnLoadedOnce;
+        IsVisibleChanged += (_, args) =>
+        {
+            if (args.NewValue is true)
+                ReassertTopmost();
+        };
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -47,7 +77,40 @@ public partial class QuickBarWindow : Window
         var style = GetWindowLongPtrW(hwnd, GwlExStyle);
         SetWindowLongPtrW(hwnd, GwlExStyle, style | WsExNoActivate | WsExToolWindow);
 
+        // A taskbar também é topmost e o shell a reergue quando o usuário troca
+        // de aplicativo; como esta janela é NOACTIVATE (nunca é reerguida por
+        // ativação), reafirma o topo da camada topmost a cada troca de foreground
+        // para não ficar por baixo da taskbar.
+        _foregroundCallback = OnForegroundChanged;
+        _foregroundHook = SetWinEventHook(
+            EventSystemForeground, EventSystemForeground, IntPtr.Zero,
+            _foregroundCallback, 0, 0, 0 /* WINEVENT_OUTOFCONTEXT */);
+
         AjustarTamanhoDosBotoes();
+    }
+
+    private void OnForegroundChanged(
+        IntPtr hook, uint evt, IntPtr hwnd, int idObject, int idChild, uint thread, uint time)
+    {
+        if (IsVisible)
+            ReassertTopmost();
+    }
+
+    private void ReassertTopmost()
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd != IntPtr.Zero)
+            SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, SwpNoMove | SwpNoSize | SwpNoActivate);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        if (_foregroundHook != IntPtr.Zero)
+        {
+            UnhookWinEvent(_foregroundHook);
+            _foregroundHook = IntPtr.Zero;
+        }
+        base.OnClosed(e);
     }
 
     private void OnLoadedOnce(object sender, RoutedEventArgs e)
@@ -80,7 +143,7 @@ public partial class QuickBarWindow : Window
         Top = top;
 
         _vm.SalvarPosicao(Left, Top);
-        Topmost = true; // reafirma o z-order acima da taskbar
+        ReassertTopmost();
     }
 
     private void PosicionarInicial()

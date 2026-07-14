@@ -43,6 +43,12 @@ sons sem abrir a janela principal.
   alimenta o card da lista e o botão da barra.
 - **Nunca `Close()`**: `OnClosing` da barra cancela e faz `Hide()` (janela WPF
   fechada não reabre); no `Application.Shutdown` o WPF ignora o cancel.
+- **Sempre acima da taskbar** (bugfix pós-release): a taskbar também é topmost e o
+  shell a reergue a cada troca de aplicativo; como a barra é NOACTIVATE (nunca é
+  reerguida por ativação), ela acabava por baixo. Corrigido com
+  `SetWinEventHook(EVENT_SYSTEM_FOREGROUND)` reafirmando `HWND_TOPMOST`
+  (`SetWindowPos` com `SWP_NOACTIVATE`) a cada mudança de foreground — verificado
+  por ordem Z contra `Shell_TrayWnd` com outra janela em foco.
 - **Glifos por code-point**: armazenados como hex no banco e convertidos em runtime
   (`CodepointToGlyphConverter`/`IconCatalog.GlyphChar`) — nenhum caractere PUA
   colado em XAML (regra do projeto).

@@ -240,6 +240,12 @@ public class SoundboardControllerTests : IDisposable
             Played.Clear();
         }
 
+        public void StopSound(string filePath)
+        {
+            Played.RemoveAll(p => string.Equals(p.Path, filePath, StringComparison.OrdinalIgnoreCase));
+            ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         public void Dispose()
         {
             _ = StoppedUnexpectedly; // silencia aviso de evento não usado

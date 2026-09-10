@@ -86,10 +86,13 @@ public partial class App : Application
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<AudioFileCache>();
         services.AddSingleton<SoundboardController>();
+        services.AddSingleton(new System.Net.Http.HttpClient());
+        services.AddSingleton<IMyInstantsService, MyInstantsService>();
 
         // ViewModels + janelas
         services.AddSingleton<QuickBarService>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddSingleton<MyInstantsViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
         services.AddSingleton<QuickBarViewModel>();

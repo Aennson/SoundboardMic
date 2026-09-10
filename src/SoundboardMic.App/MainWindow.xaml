@@ -83,8 +83,12 @@
                     <!-- Navegação -->
                     <StackPanel Grid.Row="1" Margin="14,0">
                         <RadioButton x:Name="NavSons" GroupName="nav" Style="{StaticResource NavButton}"
-                                     IsChecked="{Binding MostrandoConfiguracoes, Converter={StaticResource InverseBool}, Mode=OneWay}"
+                                     IsChecked="{Binding MostrandoSons, Mode=OneWay}"
                                      Command="{Binding MostrarSonsCommand}" Tag="&#xE8D6;" Content="Meus sons" />
+                        <RadioButton x:Name="NavMyInstants" GroupName="nav" Style="{StaticResource NavButton}"
+                                     IsChecked="{Binding MostrandoMyInstants, Mode=OneWay}"
+                                     Command="{Binding MostrarMyInstantsCommand}" Tag="&#xE774;" Content="Sons da web"
+                                     Margin="0,6,0,0" />
                         <RadioButton x:Name="NavConfig" GroupName="nav" Style="{StaticResource NavButton}"
                                      IsChecked="{Binding MostrandoConfiguracoes, Mode=OneWay}"
                                      Command="{Binding MostrarConfigCommand}" Tag="&#xE713;" Content="Configurações"
@@ -178,6 +182,9 @@
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource H1}">
                                     <Setter Property="Text" Value="Meus sons" />
                                     <Style.Triggers>
+                                        <DataTrigger Binding="{Binding MostrandoMyInstants}" Value="True">
+                                            <Setter Property="Text" Value="Sons da web" />
+                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding MostrandoConfiguracoes}" Value="True">
                                             <Setter Property="Text" Value="Configurações" />
                                         </DataTrigger>
@@ -188,7 +195,7 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Visibility="{Binding MostrandoConfiguracoes, Converter={StaticResource BoolToVis}, ConverterParameter=invert}"
+                                Visibility="{Binding MostrandoSons, Converter={StaticResource BoolToVis}}"
                                 WindowChrome.IsHitTestVisibleInChrome="True">
                         <!-- Busca -->
                         <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
@@ -267,7 +274,9 @@
                 <!-- Conteúdo -->
                 <Grid Grid.Row="3" Margin="28,20,20,20">
                     <views:SoundboardView
-                        Visibility="{Binding MostrandoConfiguracoes, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
+                        Visibility="{Binding MostrandoSons, Converter={StaticResource BoolToVis}}" />
+                    <views:MyInstantsView DataContext="{Binding MyInstants}"
+                        Visibility="{Binding DataContext.MostrandoMyInstants, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
                     <views:SettingsView DataContext="{Binding Settings}"
                         Visibility="{Binding DataContext.MostrandoConfiguracoes, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
                 </Grid>

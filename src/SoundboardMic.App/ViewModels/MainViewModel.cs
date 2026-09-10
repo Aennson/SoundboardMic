@@ -31,7 +31,8 @@ public partial class MainViewModel : ObservableObject
         ISettingsService settings,
         QuickBarService quickBar,
         AudioFileCache fileCache,
-        SettingsViewModel settingsViewModel)
+        SettingsViewModel settingsViewModel,
+        MyInstantsViewModel myInstantsViewModel)
     {
         _services = services;
         _audioRepo = audioRepo;
@@ -42,16 +43,35 @@ public partial class MainViewModel : ObservableObject
         _quickBar = quickBar;
         _fileCache = fileCache;
         Settings = settingsViewModel;
+        MyInstants = myInstantsViewModel;
+        MyInstants.SomAdicionado += (_, _) => _dispatcher.InvokeAsync(async () => await RecarregarTudoAsync());
 
         _controller.StatusChanged += (_, _) => _dispatcher.Invoke(UpdateStatus);
         _controller.ErrorRaised += (_, msg) => _dispatcher.Invoke(() => MostrarErro(msg));
     }
 
     public SettingsViewModel Settings { get; }
+    public MyInstantsViewModel MyInstants { get; }
 
     public ObservableCollection<AudioItemViewModel> Audios { get; } = new();
 
-    [ObservableProperty] private bool _mostrandoConfiguracoes;
+    /// <summary>Aba principal exibida: "sons" (acervo), "web" (myinstants) ou "config".</summary>
+    [ObservableProperty] private string _aba = "sons";
+
+    public bool MostrandoSons => Aba == "sons";
+    public bool MostrandoMyInstants => Aba == "web";
+    public bool MostrandoConfiguracoes => Aba == "config";
+
+    partial void OnAbaChanged(string value)
+    {
+        OnPropertyChanged(nameof(MostrandoSons));
+        OnPropertyChanged(nameof(MostrandoMyInstants));
+        OnPropertyChanged(nameof(MostrandoConfiguracoes));
+        if (value == "web")
+            _ = MyInstants.CarregarInicialAsync();
+        else
+            MyInstants.PararPreview();
+    }
 
     [ObservableProperty] private string _filtro = string.Empty;
 
@@ -152,8 +172,9 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ---- Navegação ----
-    [RelayCommand] private void MostrarSons() => MostrandoConfiguracoes = false;
-    [RelayCommand] private void MostrarConfig() => MostrandoConfiguracoes = true;
+    [RelayCommand] private void MostrarSons() => Aba = "sons";
+    [RelayCommand] private void MostrarMyInstants() => Aba = "web";
+    [RelayCommand] private void MostrarConfig() => Aba = "config";
 
     [RelayCommand] private void FecharErro() => ErroBanner = null;
 

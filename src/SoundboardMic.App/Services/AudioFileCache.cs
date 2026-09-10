@@ -30,6 +30,22 @@ public class AudioFileCache
     }
 
     /// <summary>
+    /// Grava bytes já em memória (ex.: baixados de um serviço externo) como uma nova
+    /// entrada de cache, sem precisar de um arquivo de origem no disco.
+    /// </summary>
+    public async Task<(string CaminhoCache, byte[] Conteudo, string NomeOriginal)> ImportarBytesAsync(
+        byte[] conteudo, string nomeArquivoSugerido, CancellationToken ct = default)
+    {
+        var extensao = Path.GetExtension(nomeArquivoSugerido);
+        if (string.IsNullOrEmpty(extensao))
+            extensao = ".mp3";
+        Directory.CreateDirectory(CacheDirectory);
+        var caminhoCache = Path.Combine(CacheDirectory, $"{Guid.NewGuid():N}{extensao}");
+        await File.WriteAllBytesAsync(caminhoCache, conteudo, ct);
+        return (caminhoCache, conteudo, Path.GetFileName(nomeArquivoSugerido));
+    }
+
+    /// <summary>
     /// Garante que o arquivo em <see cref="Audio.CaminhoArquivo"/> exista no disco,
     /// regenerando-o a partir de <see cref="Audio.ArquivoConteudo"/> se necessário.
     /// Retorna true se o caminho foi (re)criado/alterado (chamador deve persistir).

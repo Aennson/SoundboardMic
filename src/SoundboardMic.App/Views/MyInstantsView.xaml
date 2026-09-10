@@ -1,0 +1,272 @@
+<UserControl x:Class="SoundboardMic.App.Views.MyInstantsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SoundboardMic.App.ViewModels"
+             mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="820"
+             FontFamily="{StaticResource AppFont}">
+
+    <UserControl.Resources>
+        <!-- Botão de tocar/parar prévia: mesmo estilo do PlayButton, mas troca pra "parar" enquanto toca -->
+        <Style x:Key="PreviewPlayButton" TargetType="Button" BasedOn="{StaticResource PlayButton}">
+            <Setter Property="Content" Value="&#xE768;" />
+            <Setter Property="ToolTip" Value="Tocar prévia" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Tocando}" Value="True">
+                    <Setter Property="Content" Value="&#xE71A;" />
+                    <Setter Property="Background" Value="{StaticResource DangerGradientBrush}" />
+                    <Setter Property="ToolTip" Value="Parar prévia" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Botão de adicionar ao acervo: vira "check" desabilitado depois de adicionado -->
+        <Style x:Key="AddToLibraryButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Adicionado}" Value="True">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Busca -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="9" Height="42" MaxWidth="360" HorizontalAlignment="Left">
+                <Grid>
+                    <TextBox Style="{StaticResource AppTextBox}" Background="Transparent" BorderThickness="0"
+                             Padding="38,0,12,0" VerticalContentAlignment="Center"
+                             Text="{Binding Termo, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding BuscarCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="14"
+                               Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"
+                               Margin="14,0,0,0" IsHitTestVisible="False" />
+                    <TextBlock Text="Buscar no myinstants.com…" Foreground="{StaticResource TextMutedBrush}"
+                               VerticalAlignment="Center" Margin="38,0,0,0" IsHitTestVisible="False"
+                               Visibility="{Binding Termo, Converter={StaticResource StringToVis}, ConverterParameter=invert}" />
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Style="{StaticResource SecondaryButton}" Command="{Binding LimparBuscaCommand}"
+                        Margin="10,0,0,0" ToolTip="Voltar para 'Bombando no Brasil'">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72C;" FontFamily="{StaticResource IconFont}" FontSize="14"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="Em alta" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource PrimaryButton}" Command="{Binding BuscarCommand}" Margin="10,0,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="14"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="Buscar" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Erro -->
+        <Border Grid.Row="1" CornerRadius="10" Background="#3A1F26" Padding="14,10" Margin="0,0,0,14"
+                Visibility="{Binding Erro, Converter={StaticResource StringToVis}}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE783;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                           Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <TextBlock Text="{Binding Erro}" Foreground="{StaticResource DangerBrush}"
+                           TextWrapping="Wrap" VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- Conteúdo -->
+        <Grid Grid.Row="2">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding Sons}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <!-- Entrada suave, igual à grade de "Meus sons" -->
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Opacity" Value="0" />
+                                <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <TranslateTransform Y="14" />
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                 From="0" To="1" Duration="0:0:0.32" />
+                                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                                                 From="14" To="0" Duration="0:0:0.32">
+                                                    <DoubleAnimation.EasingFunction>
+                                                        <QuadraticEase EasingMode="EaseOut" />
+                                                    </DoubleAnimation.EasingFunction>
+                                                </DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:MyInstantsSoundViewModel}">
+                                <!-- Mini card: ~150px de largura → 5 por linha na largura padrão da janela -->
+                                <Border Style="{StaticResource SoundCard}" Width="150" Margin="0,0,12,12" Padding="12,12,12,10">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Ícone/cor original do botão no myinstants.com -->
+                                        <Border Grid.Row="0" Width="36" Height="36" CornerRadius="10"
+                                                HorizontalAlignment="Left"
+                                                Background="{Binding Cor, Converter={StaticResource HexToBrush}}">
+                                            <TextBlock Text="&#xE995;" Style="{StaticResource Glyph}" FontSize="16"
+                                                       Foreground="White" />
+                                        </Border>
+
+                                        <!-- Nome -->
+                                        <TextBlock Grid.Row="1" Text="{Binding Nome}" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                                                   Margin="0,10,0,0" ToolTip="{Binding Nome}" />
+
+                                        <!-- Ações: tocar prévia (sem adicionar) + adicionar ao acervo -->
+                                        <Grid Grid.Row="3" Margin="0,10,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="8" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Button Grid.Column="0" Style="{StaticResource PreviewPlayButton}"
+                                                    Width="36" Height="36" FontSize="13"
+                                                    IsEnabled="{Binding Ocupado, Converter={StaticResource InverseBool}}"
+                                                    Command="{Binding DataContext.TocarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}" />
+
+                                            <Button Grid.Column="2" Style="{StaticResource AddToLibraryButton}"
+                                                    Height="36" FontSize="12"
+                                                    IsEnabled="{Binding Ocupado, Converter={StaticResource InverseBool}}"
+                                                    Command="{Binding DataContext.AdicionarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Adicionar ao meu acervo">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock FontFamily="{StaticResource IconFont}" FontSize="12"
+                                                               VerticalAlignment="Center" Margin="0,0,6,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="&#xE710;" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Adicionado}" Value="True">
+                                                                        <Setter Property="Text" Value="&#xE73E;" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock VerticalAlignment="Center" FontSize="12">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="Adicionar" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Adicionado}" Value="True">
+                                                                        <Setter Property="Text" Value="Adicionado" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Rodapé de créditos: todo o conteúdo listado acima pertence ao myinstants.com -->
+                    <StackPanel Orientation="Horizontal" Margin="2,4,0,16">
+                        <TextBlock Text="&#xE946;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Style="{StaticResource Caption}" TextWrapping="Wrap">
+                            <Run Text="Sons fornecidos por " />
+                            <Hyperlink NavigateUri="https://www.myinstants.com/pt/index/br/"
+                                       RequestNavigate="Hyperlink_RequestNavigate">
+                                <Run Text="myinstants.com" />
+                            </Hyperlink>
+                            <Run Text=" — todos os créditos aos autores originais de cada som." />
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Carregando -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="{Binding Carregando, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="&#xE895;" Style="{StaticResource Glyph}" FontSize="34"
+                           Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" />
+                <TextBlock Text="Carregando sons do myinstants.com…" Style="{StaticResource Caption}"
+                           Margin="0,10,0,0" />
+            </StackPanel>
+
+            <!-- Estado vazio (sem resultados e sem estar carregando) -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding ListaVazia}" Value="True" />
+                                    <Condition Binding="{Binding Carregando}" Value="False" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Border Width="96" Height="96" CornerRadius="24" Background="{StaticResource CardBrush}"
+                        HorizontalAlignment="Center">
+                    <TextBlock Text="&#xE721;" Style="{StaticResource Glyph}" FontSize="44"
+                               Foreground="{StaticResource TextMutedBrush}" />
+                </Border>
+                <TextBlock Text="Nenhum som encontrado" Style="{StaticResource H2}" HorizontalAlignment="Center"
+                           Margin="0,20,0,6" />
+                <TextBlock Text="Tente buscar por outro nome ou volte para os sons em alta."
+                           Style="{StaticResource Caption}" HorizontalAlignment="Center" MaxWidth="320"
+                           TextAlignment="Center" TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

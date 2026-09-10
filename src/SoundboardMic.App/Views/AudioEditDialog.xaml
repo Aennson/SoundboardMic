@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:SoundboardMic.App.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:AudioEditViewModel}"
-        Title="Editar áudio" Height="700" Width="520"
+        Title="Editar áudio" Height="840" Width="520"
         WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent"
         FontFamily="{StaticResource AppFont}">

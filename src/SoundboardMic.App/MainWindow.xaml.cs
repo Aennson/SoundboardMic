@@ -1,6 +1,8 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using SoundboardMic.App.Services;
 using SoundboardMic.App.ViewModels;
 
@@ -25,6 +27,106 @@ public partial class MainWindow : Window
 
         // Captura de teclas para a gravação da tecla de pânico nas configurações.
         PreviewKeyDown += OnPreviewKeyDown;
+
+        // Sem essa correção, uma janela "chromeless" (WindowStyle=None +
+        // AllowsTransparency + WindowChrome) se estende além da área útil da
+        // tela ao maximizar (por cima da barra de tarefas/bordas do monitor),
+        // cortando conteúdo perto das bordas (ex.: o card de status no rodapé
+        // da sidebar). O hook do WM_GETMINMAXINFO faz o Windows respeitar a
+        // área de trabalho real do monitor ao maximizar.
+        SourceInitialized += OnSourceInitialized;
+        StateChanged += OnStateChanged;
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        HwndSource.FromHwnd(handle)?.AddHook(WindowProc);
+    }
+
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        // Cantos arredondados ficam estranhos colados na borda da tela quando
+        // maximizada; nesse estado a janela já ocupa a área útil inteira.
+        RootBorder.CornerRadius = WindowState == WindowState.Maximized
+            ? new CornerRadius(0)
+            : new CornerRadius(12);
+    }
+
+    private static IntPtr WindowProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        const int WM_GETMINMAXINFO = 0x0024;
+        if (msg == WM_GETMINMAXINFO)
+        {
+            WmGetMinMaxInfo(hwnd, lParam);
+            handled = true;
+        }
+        return IntPtr.Zero;
+    }
+
+    private static void WmGetMinMaxInfo(IntPtr hwnd, IntPtr lParam)
+    {
+        var mmi = Marshal.PtrToStructure<MINMAXINFO>(lParam);
+
+        // Área do monitor atual (considera múltiplos monitores corretamente).
+        var monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        if (monitor != IntPtr.Zero)
+        {
+            var monitorInfo = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            GetMonitorInfo(monitor, ref monitorInfo);
+            var workArea = monitorInfo.rcWork;
+            var monitorArea = monitorInfo.rcMonitor;
+
+            mmi.ptMaxPosition.X = Math.Abs(workArea.Left - monitorArea.Left);
+            mmi.ptMaxPosition.Y = Math.Abs(workArea.Top - monitorArea.Top);
+            mmi.ptMaxSize.X = Math.Abs(workArea.Right - workArea.Left);
+            mmi.ptMaxSize.Y = Math.Abs(workArea.Bottom - workArea.Top);
+        }
+
+        Marshal.StructureToPtr(mmi, lParam, true);
+    }
+
+    private const int MONITOR_DEFAULTTONEAREST = 2;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hwnd, int flags);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MINMAXINFO
+    {
+        public POINT ptReserved;
+        public POINT ptMaxSize;
+        public POINT ptMaxPosition;
+        public POINT ptMinTrackSize;
+        public POINT ptMaxTrackSize;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public int dwFlags;
     }
 
     private async void OnPreviewKeyDown(object sender, KeyEventArgs e)

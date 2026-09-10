@@ -138,7 +138,13 @@ public partial class AudioEditViewModel : ObservableObject
                 return;
             }
             // Preview toca no dispositivo de monitor (fones), não no CABLE.
-            _preview.Play(CaminhoArquivo, _settings.Current.MonitorDeviceId, (float)Volume);
+            // Aplica a mesma curva de volume (VolumeCurve) e o mesmo ganho
+            // composto (Volume × SoundboardVolume) usados pelo motor de
+            // injeção, para o preview soar como o que de fato chega aos
+            // ouvintes.
+            var ganhoComposto = VolumeCurve.ToGain((float)Volume)
+                * VolumeCurve.ToGain(_settings.Current.SoundboardVolume);
+            _preview.Play(CaminhoArquivo, _settings.Current.MonitorDeviceId, ganhoComposto);
         }
         catch (Exception ex)
         {

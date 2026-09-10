@@ -47,12 +47,14 @@ public class MicInjectionEngine : IMicInjectionEngine
     private MixingSampleProvider? _soundMixer;
     private VolumeSampleProvider? _soundboardVolumeProvider;
     private MixingSampleProvider? _mainMixer;
+    private LimiterSampleProvider? _mainLimiter;
     private WasapiOut? _output;
     private MMDevice? _outputDevice;
 
     // Monitoramento local
     private MixingSampleProvider? _monitorMixer;
     private VolumeSampleProvider? _monitorVolumeProvider;
+    private LimiterSampleProvider? _monitorLimiter;
     private WasapiOut? _monitorOutput;
     private MMDevice? _monitorDevice;
     private string? _monitorDeviceId;
@@ -103,7 +105,7 @@ public class MicInjectionEngine : IMicInjectionEngine
             {
                 _micVolume = Math.Clamp(value, 0f, 2f);
                 if (_micVolumeProvider is not null)
-                    _micVolumeProvider.Volume = _micVolume;
+                    _micVolumeProvider.Volume = VolumeCurve.ToGain(_micVolume);
             }
         }
     }
@@ -117,9 +119,9 @@ public class MicInjectionEngine : IMicInjectionEngine
             {
                 _soundboardVolume = Math.Clamp(value, 0f, 2f);
                 if (_soundboardVolumeProvider is not null)
-                    _soundboardVolumeProvider.Volume = _soundboardVolume;
+                    _soundboardVolumeProvider.Volume = VolumeCurve.ToGain(_soundboardVolume);
                 if (_monitorVolumeProvider is not null)
-                    _monitorVolumeProvider.Volume = _soundboardVolume;
+                    _monitorVolumeProvider.Volume = VolumeCurve.ToGain(_soundboardVolume);
             }
         }
     }
@@ -237,14 +239,14 @@ public class MicInjectionEngine : IMicInjectionEngine
                     Enabled = _noiseGateEnabled,
                 };
                 var micStereo = new MonoToStereoSampleProvider(_noiseGateProvider);
-                _micVolumeProvider = new VolumeSampleProvider(micStereo) { Volume = _micVolume };
+                _micVolumeProvider = new VolumeSampleProvider(micStereo) { Volume = VolumeCurve.ToGain(_micVolume) };
 
                 // 2. Sub-mixer só dos sons do soundboard (permite pânico sem tocar no mic).
                 _soundMixer = new MixingSampleProvider(MixFormat) { ReadFully = true };
                 _soundMixer.MixerInputEnded += OnMixerInputEnded;
                 _soundboardVolumeProvider = new VolumeSampleProvider(_soundMixer)
                 {
-                    Volume = _soundboardVolume,
+                    Volume = VolumeCurve.ToGain(_soundboardVolume),
                 };
 
                 // 3. Mixer principal: mic + soundboard → dispositivo virtual.
@@ -252,11 +254,16 @@ public class MicInjectionEngine : IMicInjectionEngine
                 _mainMixer.AddMixerInput(_micVolumeProvider);
                 _mainMixer.AddMixerInput((ISampleProvider)_soundboardVolumeProvider);
 
+                // Limiter final: evita que a soma dos ganhos (volume do mic + volume
+                // individual do som × volume mestre, cada um até 2.0x) estoure a
+                // amplitude e chegue distorcido/muito mais alto para quem escuta.
+                _mainLimiter = new LimiterSampleProvider(_mainMixer);
+
                 _outputDevice = AudioDeviceService.ResolveDevice(options.OutputDeviceId, DataFlow.Render);
                 _output = new WasapiOut(_outputDevice, AudioClientShareMode.Shared,
                     useEventSync: true, OutputLatencyMs);
                 _output.PlaybackStopped += OnPlaybackStopped;
-                _output.Init(_mainMixer);
+                _output.Init(_mainLimiter);
 
                 _output.Play();
                 _capture.StartRecording();
@@ -350,7 +357,7 @@ public class MicInjectionEngine : IMicInjectionEngine
         {
             var chain = SampleProviderConverter.ConvertToFormat(
                 AudioFileDecoder.ToSampleProvider(reader), MixFormat);
-            var input = new VolumeSampleProvider(chain) { Volume = Math.Clamp(volume, 0f, 2f) };
+            var input = new VolumeSampleProvider(chain) { Volume = VolumeCurve.ToGain(Math.Clamp(volume, 0f, 2f)) };
 
             _activeSounds.Add(new ActiveSound(input, reader, mixer, filePath));
             mixer.AddMixerInput((ISampleProvider)input);
@@ -371,13 +378,14 @@ public class MicInjectionEngine : IMicInjectionEngine
         _monitorMixer.MixerInputEnded += OnMixerInputEnded;
         _monitorVolumeProvider = new VolumeSampleProvider(_monitorMixer)
         {
-            Volume = _soundboardVolume,
+            Volume = VolumeCurve.ToGain(_soundboardVolume),
         };
 
         _monitorDevice = AudioDeviceService.ResolveDevice(_monitorDeviceId, DataFlow.Render);
         _monitorOutput = new WasapiOut(_monitorDevice, AudioClientShareMode.Shared,
             useEventSync: true, OutputLatencyMs);
-        _monitorOutput.Init(_monitorVolumeProvider);
+        _monitorLimiter = new LimiterSampleProvider(_monitorVolumeProvider);
+        _monitorOutput.Init(_monitorLimiter);
         _monitorOutput.Play();
     }
 
@@ -402,6 +410,7 @@ public class MicInjectionEngine : IMicInjectionEngine
         }
         _monitorMixer = null;
         _monitorVolumeProvider = null;
+        _monitorLimiter = null;
     }
 
     private void StopCore()
@@ -445,6 +454,7 @@ public class MicInjectionEngine : IMicInjectionEngine
             _soundMixer = null;
             _soundboardVolumeProvider = null;
             _mainMixer = null;
+            _mainLimiter = null;
             _isRunning = false;
         }
         finally

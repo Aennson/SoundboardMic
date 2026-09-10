@@ -41,6 +41,10 @@ public class DatabaseBootstrapper
         // Migrações para bancos criados por versões anteriores.
         await EnsureColumnAsync(connection, "Audios", "Icone", "TEXT NULL", ct);
         await EnsureColumnAsync(connection, "Audios", "Cor", "TEXT NULL", ct);
+        // Conteúdo do arquivo passa a viver no próprio banco (BLOB), em vez de depender
+        // só do caminho externo escolhido pelo usuário — ver AudioFileCache no App.
+        await EnsureColumnAsync(connection, "Audios", "ArquivoConteudo", "BLOB NULL", ct);
+        await EnsureColumnAsync(connection, "Audios", "ArquivoNomeOriginal", "TEXT NULL", ct);
     }
 
     /// <summary>

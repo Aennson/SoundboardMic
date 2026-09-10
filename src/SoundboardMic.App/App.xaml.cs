@@ -84,6 +84,7 @@ public partial class App : Application
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IStartupService, StartupService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<AudioFileCache>();
         services.AddSingleton<SoundboardController>();
 
         // ViewModels + janelas

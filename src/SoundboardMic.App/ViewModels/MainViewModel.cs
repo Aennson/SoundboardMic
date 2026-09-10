@@ -19,6 +19,7 @@ public partial class MainViewModel : ObservableObject
     private readonly SoundboardController _controller;
     private readonly ISettingsService _settings;
     private readonly QuickBarService _quickBar;
+    private readonly AudioFileCache _fileCache;
     private readonly Dispatcher _dispatcher = Application.Current.Dispatcher;
 
     public MainViewModel(
@@ -29,6 +30,7 @@ public partial class MainViewModel : ObservableObject
         SoundboardController controller,
         ISettingsService settings,
         QuickBarService quickBar,
+        AudioFileCache fileCache,
         SettingsViewModel settingsViewModel)
     {
         _services = services;
@@ -38,6 +40,7 @@ public partial class MainViewModel : ObservableObject
         _controller = controller;
         _settings = settings;
         _quickBar = quickBar;
+        _fileCache = fileCache;
         Settings = settingsViewModel;
 
         _controller.StatusChanged += (_, _) => _dispatcher.Invoke(UpdateStatus);
@@ -93,6 +96,17 @@ public partial class MainViewModel : ObservableObject
         var mapeamentos = (await _mapeamentoRepo.GetAllAsync())
             .GroupBy(m => m.AudioId)
             .ToDictionary(g => g.Key, g => g.First());
+
+        // Garante que todo áudio tenha seu conteúdo salvo no banco (migra registros
+        // legados que só tinham o caminho externo) e que o cache em disco exista
+        // (regenera a partir do BLOB se tiver sido apagado/movido de máquina).
+        foreach (var audio in audios)
+        {
+            var migrado = await _fileCache.MigrarLegadoAsync(audio);
+            var materializado = !migrado && _fileCache.GarantirMaterializado(audio);
+            if (migrado || materializado)
+                await _audioRepo.UpdateAsync(audio);
+        }
 
         Audios.Clear();
         foreach (var audio in audios)
@@ -199,6 +213,7 @@ public partial class MainViewModel : ObservableObject
         _dialogs,
         _services.GetRequiredService<Core.AudioEngine.IPlaybackService>(),
         _settings,
+        _fileCache,
         editing);
 
     private async Task RecarregarTudoAsync()

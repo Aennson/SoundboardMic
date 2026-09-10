@@ -19,9 +19,14 @@ public partial class AudioEditViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly IPlaybackService _preview;
     private readonly ISettingsService _settings;
+    private readonly AudioFileCache _fileCache;
 
     private readonly Audio? _existing;
     private readonly Mapeamento? _existingMapeamento;
+
+    /// <summary>True quando o usuário escolheu um arquivo novo nesta sessão de edição
+    /// (via "Procurar"), indicando que o conteúdo deve ser reimportado para o banco.</summary>
+    private bool _arquivoAlterado;
 
     public AudioEditViewModel(
         IAudioRepository audioRepo,
@@ -29,6 +34,7 @@ public partial class AudioEditViewModel : ObservableObject
         IDialogService dialogs,
         IPlaybackService preview,
         ISettingsService settings,
+        AudioFileCache fileCache,
         AudioItemViewModel? editing)
     {
         _audioRepo = audioRepo;
@@ -36,6 +42,7 @@ public partial class AudioEditViewModel : ObservableObject
         _dialogs = dialogs;
         _preview = preview;
         _settings = settings;
+        _fileCache = fileCache;
 
         _existing = editing?.Audio;
         _existingMapeamento = editing?.Mapeamento;
@@ -121,7 +128,10 @@ public partial class AudioEditViewModel : ObservableObject
     {
         var path = _dialogs.PickAudioFile();
         if (path is not null)
+        {
             CaminhoArquivo = path;
+            _arquivoAlterado = true;
+        }
     }
 
     private bool PodePreview() =>
@@ -226,12 +236,24 @@ public partial class AudioEditViewModel : ObservableObject
         try
         {
             var audio = _existing ?? new Audio();
+            var caminhoCacheAnterior = _existing?.CaminhoArquivo;
+
             audio.Nome = Nome.Trim();
-            audio.CaminhoArquivo = CaminhoArquivo;
             audio.VolumePadrao = Volume;
             audio.DuracaoMs = duracao;
             audio.Icone = Icone;
             audio.Cor = Cor;
+
+            // Arquivo novo (áudio recém-criado ou "Procurar" usado na edição): importa o
+            // conteúdo para o banco e materializa uma cópia própria em cache — a partir
+            // daqui, tocar o som não depende mais do arquivo original escolhido pelo usuário.
+            if (_existing is null || _arquivoAlterado)
+            {
+                var (caminhoCache, conteudo, nomeOriginal) = await _fileCache.ImportarAsync(CaminhoArquivo);
+                audio.CaminhoArquivo = caminhoCache;
+                audio.ArquivoConteudo = conteudo;
+                audio.ArquivoNomeOriginal = nomeOriginal;
+            }
 
             if (_existing is null)
                 await _audioRepo.AddAsync(audio);
@@ -239,6 +261,13 @@ public partial class AudioEditViewModel : ObservableObject
                 await _audioRepo.UpdateAsync(audio);
 
             await SalvarMapeamentoAsync(audio.Id, combo);
+
+            // Só remove o cache antigo depois que o novo já foi salvo com sucesso.
+            if (_arquivoAlterado && caminhoCacheAnterior is not null
+                && !string.Equals(caminhoCacheAnterior, audio.CaminhoArquivo, StringComparison.OrdinalIgnoreCase))
+            {
+                _fileCache.RemoverCache(caminhoCacheAnterior);
+            }
 
             Salvou = true;
             RequestClose?.Invoke(this, EventArgs.Empty);
@@ -297,6 +326,7 @@ public partial class AudioEditViewModel : ObservableObject
 
         _preview.Stop();
         await _audioRepo.DeleteAsync(_existing.Id); // cascade remove o mapeamento
+        _fileCache.RemoverCache(_existing.CaminhoArquivo);
         Excluiu = true;
         RequestClose?.Invoke(this, EventArgs.Empty);
     }

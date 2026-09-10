@@ -316,6 +316,24 @@ public class MicInjectionEngine : IMicInjectionEngine
         ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    public void StopSound(string filePath)
+    {
+        lock (_lock)
+        {
+            var matches = _activeSounds.Where(s => string.Equals(s.FilePath, filePath, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (matches.Count == 0)
+                return;
+
+            foreach (var sound in matches)
+            {
+                sound.Owner.RemoveMixerInput(sound.Input);
+                sound.Reader.Dispose();
+                _activeSounds.Remove(sound);
+            }
+        }
+        ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public void Dispose()
     {
         lock (_lock)

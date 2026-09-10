@@ -194,7 +194,12 @@ public partial class MainViewModel : ObservableObject
     private void TocarAudio(AudioItemViewModel? item)
     {
         if (item is null) return;
-        _controller.TriggerSound(item.CaminhoArquivo, (float)item.Audio.VolumePadrao);
+
+        // Play/stop no mesmo botão: se já está tocando, o clique interrompe na hora.
+        if (item.Tocando)
+            _controller.StopSound(item.CaminhoArquivo);
+        else
+            _controller.TriggerSound(item.CaminhoArquivo, (float)item.Audio.VolumePadrao);
     }
 
     [RelayCommand]

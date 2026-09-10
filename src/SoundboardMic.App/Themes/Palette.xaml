@@ -39,6 +39,16 @@
         <GradientStop Offset="1" Color="#6D9BFF" />
     </LinearGradientBrush>
 
+    <!-- ==== Gradiente de "parar" (usado no botão play quando o som está tocando) ==== -->
+    <LinearGradientBrush x:Key="DangerGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#FF5C6C" />
+        <GradientStop Offset="1" Color="#E8395C" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DangerGradientHoverBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#FF7480" />
+        <GradientStop Offset="1" Color="#FF5470" />
+    </LinearGradientBrush>
+
     <!-- ==== Estados ==== -->
     <SolidColorBrush x:Key="SuccessBrush" Color="#3DD68C" />
     <SolidColorBrush x:Key="DangerBrush" Color="#FF5C6C" />

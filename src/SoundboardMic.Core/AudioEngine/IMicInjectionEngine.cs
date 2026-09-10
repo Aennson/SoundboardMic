@@ -63,4 +63,7 @@ public interface IMicInjectionEngine : IDisposable
 
     /// <summary>Tecla de pânico: interrompe todos os sons do soundboard (mic continua).</summary>
     void StopAllSounds();
+
+    /// <summary>Interrompe todas as instâncias em execução de um arquivo específico (usado pelo botão play/stop do card).</summary>
+    void StopSound(string filePath);
 }

@@ -8,65 +8,71 @@
              FontFamily="{StaticResource AppFont}">
 
     <Grid>
-        <!-- Lista de sons -->
+        <!-- Grade de cards de som (responsiva: reflui automaticamente conforme a largura) -->
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
             <ItemsControl ItemsSource="{Binding Audios}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type vm:AudioItemViewModel}">
-                        <Border Margin="0,0,0,12" CornerRadius="14" BorderThickness="1" Padding="14,12">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Background" Value="{StaticResource CardBrush}" />
-                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="{StaticResource CardHoverBrush}" />
-                                            <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}" />
-                                        </Trigger>
-                                        <DataTrigger Binding="{Binding Tocando}" Value="True">
-                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-
+                        <!-- Card: largura fixa ~134px → 5 por linha na largura padrão da janela -->
+                        <Border Style="{StaticResource SoundCard}" Width="134" Margin="0,0,12,12" Padding="12,12,12,10">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
-                                <!-- Play -->
-                                <Button Grid.Column="0" Style="{StaticResource PlayButton}" Content="&#xE768;"
-                                        VerticalAlignment="Center"
-                                        Command="{Binding DataContext.TocarAudioCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}" ToolTip="Testar (injeta no mix)" />
+                                <!-- Cabeçalho: ícone/cor do áudio + toggle de atalho ativo -->
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                                <!-- Nome + arquivo -->
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0">
-                                    <TextBlock Text="{Binding Nome}" FontSize="15" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                        <TextBlock Text="&#xE8D6;" FontFamily="{StaticResource IconFont}" FontSize="11"
-                                                   Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding NomeArquivo}" Style="{StaticResource Caption}"
-                                                   Margin="6,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="220" />
-                                        <Border Width="3" Height="3" CornerRadius="2" Background="{StaticResource TextMutedBrush}"
-                                                Margin="8,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding DuracaoTexto}" Style="{StaticResource Caption}" />
-                                        <Border Width="3" Height="3" CornerRadius="2" Background="{StaticResource TextMutedBrush}"
-                                                Margin="8,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding VolumeTexto}" Style="{StaticResource Caption}" />
-                                    </StackPanel>
+                                    <!-- Ícone do card = mesmo ícone/cor escolhidos no editor -->
+                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="10"
+                                            Background="{Binding Cor, Converter={StaticResource HexToBrush}}">
+                                        <TextBlock Text="{Binding Icone, Converter={StaticResource CodepointToGlyph}}"
+                                                   Style="{StaticResource Glyph}" FontSize="16" Foreground="White" />
+                                    </Border>
+
+                                    <ToggleButton Grid.Column="2" Style="{StaticResource ToggleSwitchSmall}"
+                                                  VerticalAlignment="Top" HorizontalAlignment="Right"
+                                                  IsChecked="{Binding Ativo, Mode=TwoWay}"
+                                                  Command="{Binding DataContext.AlternarAtivoCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                  CommandParameter="{Binding}"
+                                                  ToolTip="Ativar/desativar o atalho" />
+                                </Grid>
+
+                                <!-- Nome -->
+                                <TextBlock Grid.Row="1" Text="{Binding Nome}" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap" Margin="0,10,0,0" ToolTip="{Binding Nome}" />
+
+                                <!-- Arquivo -->
+                                <TextBlock Grid.Row="2" Text="{Binding NomeArquivo}" Style="{StaticResource Caption}"
+                                           Margin="0,2,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding NomeArquivo}" />
+
+                                <!-- Duração + volume -->
+                                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="{Binding DuracaoTexto}" Style="{StaticResource Caption}" />
+                                    <Border Width="3" Height="3" CornerRadius="2" Background="{StaticResource TextMutedBrush}"
+                                            Margin="6,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding VolumeTexto}" Style="{StaticResource Caption}" />
                                 </StackPanel>
 
                                 <!-- Chip de atalho -->
-                                <Border Grid.Column="2" VerticalAlignment="Center" Margin="8,0" CornerRadius="8"
-                                        MinWidth="96" Height="34" Padding="12,0">
+                                <Border Grid.Row="4" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                                        Margin="0,8,0,10" CornerRadius="8" Height="30" Padding="8,0">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#231F3A" />
@@ -84,36 +90,42 @@
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     Visibility="{Binding TemAtalho, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="&#xE765;" FontFamily="{StaticResource IconFont}" FontSize="12"
+                                            <TextBlock Text="&#xE765;" FontFamily="{StaticResource IconFont}" FontSize="11"
                                                        Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"
-                                                       Margin="0,0,7,0" />
+                                                       Margin="0,0,6,0" />
                                             <TextBlock Text="{Binding Teclas}" Foreground="{StaticResource TextPrimaryBrush}"
-                                                       FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                                                       FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                         <TextBlock Text="sem atalho" Foreground="{StaticResource TextMutedBrush}"
-                                                   FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Visibility="{Binding TemAtalho, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
                                     </Grid>
                                 </Border>
 
-                                <!-- Toggle ativo -->
-                                <ToggleButton Grid.Column="3" Style="{StaticResource ToggleSwitch}" VerticalAlignment="Center"
-                                              Margin="8,0" IsChecked="{Binding Ativo, Mode=TwoWay}"
-                                              Command="{Binding DataContext.AlternarAtivoCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                              CommandParameter="{Binding}"
-                                              ToolTip="Ativar/desativar o atalho" />
+                                <!-- Ações: play/stop em destaque + editar/excluir -->
+                                <Grid Grid.Row="5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                                <!-- Editar -->
-                                <Button Grid.Column="4" Style="{StaticResource IconButton}" Content="&#xE70F;"
-                                        VerticalAlignment="Center"
-                                        Command="{Binding DataContext.EditarAudioCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}" ToolTip="Editar" />
+                                    <Button Grid.Column="0" Style="{StaticResource PlayStopButton}" Width="36" Height="36"
+                                            FontSize="14" HorizontalAlignment="Left"
+                                            Command="{Binding DataContext.TocarAudioCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" />
 
-                                <!-- Excluir -->
-                                <Button Grid.Column="5" Style="{StaticResource IconButtonDanger}" Content="&#xE74D;"
-                                        VerticalAlignment="Center"
-                                        Command="{Binding DataContext.ExcluirAudioCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}" ToolTip="Excluir" />
+                                    <Button Grid.Column="1" Style="{StaticResource IconButton}" Content="&#xE70F;"
+                                            Width="30" Height="30" FontSize="14" VerticalAlignment="Center"
+                                            Command="{Binding DataContext.EditarAudioCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" ToolTip="Editar" />
+
+                                    <Button Grid.Column="2" Style="{StaticResource IconButtonDanger}" Content="&#xE74D;"
+                                            Width="30" Height="30" FontSize="14" VerticalAlignment="Center"
+                                            Command="{Binding DataContext.ExcluirAudioCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            CommandParameter="{Binding}" ToolTip="Excluir" />
+                                </Grid>
                             </Grid>
                         </Border>
                     </DataTemplate>

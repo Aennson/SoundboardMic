@@ -198,6 +198,9 @@ public class SoundboardController : IDisposable
 
     public void StopAllSounds() => _engine.StopAllSounds();
 
+    /// <summary>Para um som específico (usado pelo botão play/stop do card ao ser clicado enquanto toca).</summary>
+    public void StopSound(string filePath) => _engine.StopSound(filePath);
+
     /// <summary>Snapshot do status atual para a UI.</summary>
     public SoundboardStatus GetStatus()
     {

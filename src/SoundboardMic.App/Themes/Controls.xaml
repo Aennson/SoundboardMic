@@ -178,6 +178,37 @@
         </Setter>
     </Style>
 
+    <!-- Botão de play/parar do card de som: verde/roxo tocando play, vermelho quando ativo (toca) -->
+    <Style x:Key="PlayStopButton" TargetType="Button" BasedOn="{StaticResource PlayButton}">
+        <Setter Property="Content" Value="&#xE768;" />
+        <Setter Property="ToolTip" Value="Tocar" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Tocando}" Value="True">
+                <Setter Property="Background" Value="{StaticResource DangerGradientBrush}" />
+                <Setter Property="Content" Value="&#xE71A;" />
+                <Setter Property="ToolTip" Value="Parar" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Cartão de som (grade responsiva "Meus sons") -->
+    <Style x:Key="SoundCard" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource CardBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource CornerCard}" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource CardHoverBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}" />
+            </Trigger>
+            <DataTrigger Binding="{Binding Tocando}" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                <Setter Property="BorderThickness" Value="1.5" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Botão de áudio da barra rápida (fundo = cor do áudio, via Background) -->
     <Style x:Key="QuickBarButton" TargetType="Button">
         <Setter Property="Foreground" Value="White" />
@@ -396,6 +427,29 @@
                             <Setter TargetName="track" Property="Background" Value="{StaticResource AccentGradientBrush}" />
                             <Setter TargetName="knob" Property="HorizontalAlignment" Value="Right" />
                             <Setter TargetName="knob" Property="Margin" Value="0,0,3,0" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Variante compacta do toggle switch (usada no cabeçalho dos cards de som) -->
+    <Style x:Key="ToggleSwitchSmall" TargetType="ToggleButton">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="track" Width="34" Height="19" CornerRadius="10"
+                            Background="{StaticResource BorderStrongBrush}">
+                        <Ellipse x:Name="knob" Width="15" Height="15" Fill="White"
+                                 HorizontalAlignment="Left" Margin="2,0,0,0" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="track" Property="Background" Value="{StaticResource AccentGradientBrush}" />
+                            <Setter TargetName="knob" Property="HorizontalAlignment" Value="Right" />
+                            <Setter TargetName="knob" Property="Margin" Value="0,0,2,0" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

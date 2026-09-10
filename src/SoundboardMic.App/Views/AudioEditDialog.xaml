@@ -293,6 +293,18 @@
                             Content="&#xE74D;" Command="{Binding LimparAtalhoCommand}" ToolTip="Remover atalho" />
                 </Grid>
 
+                <!-- Atalho ativo/inativo (antes ficava na lista, agora só se edita aqui) -->
+                <Grid Margin="2,14,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ToggleButton Grid.Column="0" Style="{StaticResource ToggleSwitchSmall}"
+                                  VerticalAlignment="Center" IsChecked="{Binding Ativo, Mode=TwoWay}" />
+                    <TextBlock Grid.Column="1" Text="Atalho ativo" Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="13" VerticalAlignment="Center" Margin="10,0,0,0" />
+                </Grid>
+
                 <!-- Erro -->
                 <Border Background="#3A1F26" CornerRadius="9" Padding="14,10" Margin="0,16,0,0"
                         Visibility="{Binding Erro, Converter={StaticResource StringToVis}}">
@@ -306,15 +318,20 @@
             </StackPanel>
             </ScrollViewer>
 
-            <!-- Rodapé -->
+            <!-- Rodapé: cancelar · excluir (só ao editar) · salvar -->
             <Grid Grid.Row="2" Margin="0,24,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" Style="{StaticResource SecondaryButton}" Content="Cancelar"
                         HorizontalAlignment="Left" Width="120" Click="Fechar_Click" />
-                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}"
+                <Button Grid.Column="1" Style="{StaticResource IconButtonDanger}" Width="46" Height="46"
+                        Margin="0,0,10,0" Content="&#xE74D;" ToolTip="Excluir áudio"
+                        Visibility="{Binding IsEdicao, Converter={StaticResource BoolToVis}}"
+                        Command="{Binding ExcluirCommand}" />
+                <Button Grid.Column="2" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}"
                         Width="150">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE74E;" FontFamily="{StaticResource IconFont}" FontSize="15"

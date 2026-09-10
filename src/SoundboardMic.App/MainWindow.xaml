@@ -10,13 +10,27 @@
         d:DataContext="{d:DesignInstance vm:MainViewModel}"
         Title="SoundboardMic" Height="720" Width="1040" MinHeight="560" MinWidth="880"
         WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="True" Background="Transparent"
-        FontFamily="{StaticResource AppFont}">
+        FontFamily="{StaticResource AppFont}" Opacity="0">
+
+    <!-- Entrada suave: em vez de "estalar" na tela, a janela some do transparente até o
+         estado final (evita o flash abrupto do WindowStyle=None). RenderTransform não é
+         suportado em janelas AllowsTransparency+WindowChrome, então animamos só a Opacity. -->
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                     From="0" To="1" Duration="0:0:0.28" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="0" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0" />
     </WindowChrome.WindowChrome>
 
-    <Border Background="{StaticResource BgBaseBrush}" CornerRadius="12"
+    <Border x:Name="RootBorder" Background="{StaticResource BgBaseBrush}" CornerRadius="12"
             BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
         <Grid>
             <Grid.ColumnDefinitions>

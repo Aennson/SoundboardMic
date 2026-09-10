@@ -178,17 +178,39 @@
         </Setter>
     </Style>
 
-    <!-- Botão de play/parar do card de som: verde/roxo tocando play, vermelho quando ativo (toca) -->
-    <Style x:Key="PlayStopButton" TargetType="Button" BasedOn="{StaticResource PlayButton}">
-        <Setter Property="Content" Value="&#xE768;" />
-        <Setter Property="ToolTip" Value="Tocar" />
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding Tocando}" Value="True">
-                <Setter Property="Background" Value="{StaticResource DangerGradientBrush}" />
-                <Setter Property="Content" Value="&#xE71A;" />
-                <Setter Property="ToolTip" Value="Parar" />
-            </DataTrigger>
-        </Style.Triggers>
+    <!-- Botão de parar (interrompe apenas as instâncias deste áudio) -->
+    <Style x:Key="StopButton" TargetType="Button">
+        <Setter Property="Content" Value="&#xE71A;" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="{StaticResource DangerGradientBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Ellipse x:Name="ring" Fill="{TemplateBinding Background}">
+                            <Ellipse.Effect>
+                                <DropShadowEffect BlurRadius="16" ShadowDepth="0" Color="#FF5C6C" Opacity="0.45" />
+                            </Ellipse.Effect>
+                        </Ellipse>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ring" Property="Fill" Value="{StaticResource DangerGradientHoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="ring" Property="RenderTransform">
+                                <Setter.Value><ScaleTransform ScaleX="0.92" ScaleY="0.92" /></Setter.Value>
+                            </Setter>
+                            <Setter TargetName="ring" Property="RenderTransformOrigin" Value="0.5,0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Cartão de som (grade responsiva "Meus sons") -->
@@ -197,14 +219,40 @@
         <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource CornerCard}" />
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <TranslateTransform X="0" Y="0" />
+            </Setter.Value>
+        </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{StaticResource CardHoverBrush}" />
                 <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}" />
             </Trigger>
+            <!-- Enquanto o som toca: destaque na borda + tremida sutil no card -->
             <DataTrigger Binding="{Binding Tocando}" Value="True">
                 <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                 <Setter Property="BorderThickness" Value="1.5" />
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard x:Name="ShakeBeginStoryboard">
+                        <Storyboard RepeatBehavior="Forever">
+                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)">
+                                <LinearDoubleKeyFrame KeyTime="0:0:0.00" Value="0" />
+                                <LinearDoubleKeyFrame KeyTime="0:0:0.06" Value="-3.2" />
+                                <LinearDoubleKeyFrame KeyTime="0:0:0.12" Value="3.2" />
+                                <LinearDoubleKeyFrame KeyTime="0:0:0.18" Value="-3.2" />
+                                <LinearDoubleKeyFrame KeyTime="0:0:0.24" Value="3.2" />
+                                <LinearDoubleKeyFrame KeyTime="0:0:0.30" Value="-2.0" />
+                                <LinearDoubleKeyFrame KeyTime="0:0:0.36" Value="0" />
+                                <LinearDoubleKeyFrame KeyTime="0:0:0.70" Value="0" />
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.EnterActions>
+                <DataTrigger.ExitActions>
+                    <StopStoryboard BeginStoryboardName="ShakeBeginStoryboard" />
+                </DataTrigger.ExitActions>
             </DataTrigger>
         </Style.Triggers>
     </Style>

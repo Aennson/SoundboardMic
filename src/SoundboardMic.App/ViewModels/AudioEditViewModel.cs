@@ -51,6 +51,7 @@ public partial class AudioEditViewModel : ObservableObject
         // Null (legado/novo) vira o padrão do catálogo — a UI sempre tem uma seleção.
         _icone = editing?.Audio.Icone ?? IconCatalog.GlifoPadrao;
         _cor = editing?.Audio.Cor ?? IconCatalog.CorPadrao;
+        _ativo = editing?.Mapeamento?.Ativo ?? true;
     }
 
     public IReadOnlyList<IconOption> Glifos => IconCatalog.Glifos;
@@ -86,6 +87,10 @@ public partial class AudioEditViewModel : ObservableObject
     /// <summary>Atalho gravado (canônico) ou vazio.</summary>
     [ObservableProperty]
     private string _teclas = string.Empty;
+
+    /// <summary>Se o atalho está ativo (editável apenas aqui, no editor do áudio).</summary>
+    [ObservableProperty]
+    private bool _ativo = true;
 
     /// <summary>Se está no modo "aguardando pressionar tecla".</summary>
     [ObservableProperty]
@@ -260,14 +265,34 @@ public partial class AudioEditViewModel : ObservableObject
             {
                 AudioId = audioId,
                 Teclas = teclas,
-                Ativo = true,
+                Ativo = Ativo,
             });
         }
         else
         {
             _existingMapeamento.Teclas = teclas;
+            _existingMapeamento.Ativo = Ativo;
             await _mapeamentoRepo.UpdateAsync(_existingMapeamento);
         }
+    }
+
+    /// <summary>Resultado da exclusão (para a janela fechar e a lista recarregar).</summary>
+    public bool Excluiu { get; private set; }
+
+    private bool PodeExcluir() => IsEdicao;
+
+    [RelayCommand(CanExecute = nameof(PodeExcluir))]
+    private async Task Excluir()
+    {
+        if (_existing is null) return;
+        if (!_dialogs.Confirm("Excluir áudio",
+                $"Remover \"{_existing.Nome}\"? O atalho associado também será removido."))
+            return;
+
+        _preview.Stop();
+        await _audioRepo.DeleteAsync(_existing.Id); // cascade remove o mapeamento
+        Excluiu = true;
+        RequestClose?.Invoke(this, EventArgs.Empty);
     }
 
     public void StopPreview() => _preview.Stop();

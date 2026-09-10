@@ -174,41 +174,23 @@ public partial class MainViewModel : ObservableObject
     {
         if (item is null) return;
         var vm = CriarEditor(item);
-        if (_dialogs.ShowAudioEditor(vm) && vm.Salvou)
+        if (_dialogs.ShowAudioEditor(vm) && (vm.Salvou || vm.Excluiu))
             await RecarregarTudoAsync();
-    }
-
-    [RelayCommand]
-    private async Task ExcluirAudio(AudioItemViewModel? item)
-    {
-        if (item is null) return;
-        if (!_dialogs.Confirm("Excluir áudio",
-                $"Remover \"{item.Nome}\"? O atalho associado também será removido."))
-            return;
-
-        await _audioRepo.DeleteAsync(item.Id); // cascade remove o mapeamento
-        await RecarregarTudoAsync();
     }
 
     [RelayCommand]
     private void TocarAudio(AudioItemViewModel? item)
     {
         if (item is null) return;
-
-        // Play/stop no mesmo botão: se já está tocando, o clique interrompe na hora.
-        if (item.Tocando)
-            _controller.StopSound(item.CaminhoArquivo);
-        else
-            _controller.TriggerSound(item.CaminhoArquivo, (float)item.Audio.VolumePadrao);
+        // Sempre dispara uma nova instância: o mesmo som pode se sobrepor várias vezes.
+        _controller.TriggerSound(item.CaminhoArquivo, (float)item.Audio.VolumePadrao);
     }
 
     [RelayCommand]
-    private async Task AlternarAtivo(AudioItemViewModel? item)
+    private void PararAudio(AudioItemViewModel? item)
     {
-        if (item?.Mapeamento is null) return;
-        item.Mapeamento.Ativo = item.Ativo;
-        await _mapeamentoRepo.UpdateAsync(item.Mapeamento);
-        await _controller.ReloadBindingsAsync();
+        if (item is null) return;
+        _controller.StopSound(item.CaminhoArquivo);
     }
 
     private AudioEditViewModel CriarEditor(AudioItemViewModel? editing) => new(

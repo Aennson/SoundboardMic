@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:SoundboardMic.App.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:AudioEditViewModel}"
-        Title="Editar áudio" Height="840" Width="520"
+        Title="Editar áudio" Height="560" Width="520"
         WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent"
         FontFamily="{StaticResource AppFont}">
@@ -66,7 +66,60 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Abas do editor: cabeçalho como "pills" (sem a moldura padrão de TabItem) -->
+        <Style x:Key="DialogTabItem" TargetType="TabItem">
+            <Setter Property="Padding" Value="18,9" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="bd" Background="Transparent" CornerRadius="{StaticResource CornerControl}"
+                                Padding="{TemplateBinding Padding}" Margin="0,0,8,0">
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource CardHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource CardBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DialogTabControl" TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="ItemContainerStyle" Value="{StaticResource DialogTabItem}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Background="{StaticResource BgBaseBrush}" CornerRadius="{StaticResource CornerControl}"
+                                    Padding="4" Margin="0,0,0,16">
+                                <TabPanel IsItemsHost="True" HorizontalAlignment="Left" />
+                            </Border>
+                            <ContentPresenter Grid.Row="1" ContentSource="SelectedContent" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
+
 
     <Border Background="{StaticResource BgLayerBrush}" CornerRadius="16"
             BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1">
@@ -78,6 +131,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -99,101 +153,106 @@
                         ToolTip="Fechar" />
             </Grid>
 
-            <!-- Conteúdo -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
+            <!-- Conteúdo em abas: evita rolagem lateral, cada aba cabe inteira na janela -->
+            <TabControl Grid.Row="1" Style="{StaticResource DialogTabControl}">
+                <TabItem Header="PRINCIPAL">
+                    <StackPanel>
 
-                <TextBlock Text="NOME" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="2,0,0,6" />
-                <TextBox Style="{StaticResource AppTextBox}"
-                         Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="NOME" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="2,0,0,6" />
+                        <TextBox Style="{StaticResource AppTextBox}"
+                                 Text="{Binding Nome, UpdateSourceTrigger=PropertyChanged}" />
 
-                <TextBlock Text="ARQUIVO DE ÁUDIO" Style="{StaticResource Caption}" FontWeight="SemiBold"
-                           Margin="2,18,0,6" />
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Background="{StaticResource BgBaseBrush}"
-                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                            CornerRadius="9" Height="42" Padding="14,0">
-                        <TextBlock Text="{Binding NomeArquivo}" VerticalAlignment="Center"
-                                   Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
-                    </Border>
-                    <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Margin="10,0,0,0"
-                            Command="{Binding PickFileCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8E5;" FontFamily="{StaticResource IconFont}" FontSize="15"
-                                       VerticalAlignment="Center" Margin="0,0,8,0" />
-                            <TextBlock Text="Procurar" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Button>
-                </Grid>
+                        <TextBlock Text="ARQUIVO DE ÁUDIO" Style="{StaticResource Caption}" FontWeight="SemiBold"
+                                   Margin="2,18,0,6" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{StaticResource BgBaseBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="9" Height="42" Padding="14,0">
+                                <TextBlock Text="{Binding NomeArquivo}" VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                            </Border>
+                            <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Margin="10,0,0,0"
+                                    Command="{Binding PickFileCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8E5;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                                               VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="Procurar" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
 
-                <!-- Volume -->
-                <Grid Margin="0,18,0,0">
-                    <TextBlock Text="VOLUME" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="2,0,0,6" />
-                    <TextBlock Text="{Binding Volume, Converter={StaticResource VolToPercent}}"
-                               Style="{StaticResource Caption}" HorizontalAlignment="Right"
-                               Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
-                </Grid>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="&#xE767;" FontFamily="{StaticResource IconFont}"
-                               Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"
-                               Margin="0,0,12,0" />
-                    <Slider Grid.Column="1" Style="{StaticResource AppSlider}" Minimum="0" Maximum="2"
-                            Value="{Binding Volume, Mode=TwoWay}" />
-                    <Button Grid.Column="2" Style="{StaticResource PlayButton}" Width="40" Height="40" Margin="12,0,0,0"
-                            Command="{Binding PreviewCommand}" Content="&#xE768;" ToolTip="Ouvir prévia (nos fones)" />
-                </Grid>
+                        <!-- Volume -->
+                        <Grid Margin="0,18,0,0">
+                            <TextBlock Text="VOLUME" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="2,0,0,6" />
+                            <TextBlock Text="{Binding Volume, Converter={StaticResource VolToPercent}}"
+                                       Style="{StaticResource Caption}" HorizontalAlignment="Right"
+                                       Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="&#xE767;" FontFamily="{StaticResource IconFont}"
+                                       Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"
+                                       Margin="0,0,12,0" />
+                            <Slider Grid.Column="1" Style="{StaticResource AppSlider}" Minimum="0" Maximum="2"
+                                    Value="{Binding Volume, Mode=TwoWay}" />
+                            <Button Grid.Column="2" Style="{StaticResource PlayButton}" Width="40" Height="40" Margin="12,0,0,0"
+                                    Command="{Binding PreviewCommand}" Content="&#xE768;" ToolTip="Ouvir prévia (nos fones)" />
+                        </Grid>
 
-                <!-- Categoria/grupo de organização -->
-                <TextBlock Text="CATEGORIA" Style="{StaticResource Caption}" FontWeight="SemiBold"
-                           Margin="2,18,0,6" />
-                <TextBox Style="{StaticResource AppTextBox}"
-                         Text="{Binding CategoriaTexto, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBlock Text="Deixe em branco para não categorizar. Digite um nome novo para criar uma categoria."
-                           Style="{StaticResource Caption}" Margin="2,6,0,0" TextWrapping="Wrap" />
-                <ItemsControl ItemsSource="{Binding CategoriasDisponiveis}" Margin="0,8,0,0">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Style="{StaticResource SecondaryButton}" Height="30" Padding="12,0" FontSize="12"
-                                    Margin="0,0,8,8" Content="{Binding}"
-                                    Command="{Binding DataContext.SelecionarCategoriaCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                        <!-- Categoria/grupo de organização -->
+                        <TextBlock Text="CATEGORIA" Style="{StaticResource Caption}" FontWeight="SemiBold"
+                                   Margin="2,18,0,6" />
+                        <TextBox Style="{StaticResource AppTextBox}"
+                                 Text="{Binding CategoriaTexto, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="Deixe em branco para não categorizar. Digite um nome novo para criar uma categoria."
+                                   Style="{StaticResource Caption}" Margin="2,6,0,0" TextWrapping="Wrap" />
+                        <ItemsControl ItemsSource="{Binding CategoriasDisponiveis}" Margin="0,8,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource SecondaryButton}" Height="30" Padding="12,0" FontSize="12"
+                                            Margin="0,0,8,8" Content="{Binding}"
+                                            Command="{Binding DataContext.SelecionarCategoriaCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </TabItem>
 
-                <!-- Ícone e cor (barra rápida) -->
-                <TextBlock Text="ÍCONE E COR (BARRA RÁPIDA)" Style="{StaticResource Caption}" FontWeight="SemiBold"
-                           Margin="2,20,0,6" />
-                <ItemsControl ItemsSource="{Binding Glifos}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <RadioButton GroupName="IconeAudio" Style="{StaticResource IconChoice}"
-                                         ToolTip="{Binding Nome}"
-                                         Command="{Binding DataContext.SelecionarIconeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                         CommandParameter="{Binding Codigo}">
-                                <RadioButton.IsChecked>
-                                    <MultiBinding Converter="{StaticResource IsEqual}" Mode="OneWay">
-                                        <Binding Path="DataContext.Icone" RelativeSource="{RelativeSource AncestorType=Window}" />
-                                        <Binding Path="Codigo" />
+                <TabItem Header="MAIS OPÇÕES">
+                    <StackPanel>
+                        <!-- Ícone e cor (barra rápida) -->
+                        <TextBlock Text="ÍCONE E COR (BARRA RÁPIDA)" Style="{StaticResource Caption}" FontWeight="SemiBold"
+                                   Margin="2,0,0,6" />
+                        <ItemsControl ItemsSource="{Binding Glifos}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton GroupName="IconeAudio" Style="{StaticResource IconChoice}"
+                                                 ToolTip="{Binding Nome}"
+                                                 Command="{Binding DataContext.SelecionarIconeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 CommandParameter="{Binding Codigo}">
+                                        <RadioButton.IsChecked>
+                                            <MultiBinding Converter="{StaticResource IsEqual}" Mode="OneWay">
+                                                <Binding Path="DataContext.Icone" RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                <Binding Path="Codigo" />
                                     </MultiBinding>
                                 </RadioButton.IsChecked>
                                 <TextBlock Text="{Binding Codigo, Converter={StaticResource CodepointToGlyph}}"
@@ -316,33 +375,34 @@
                             Content="&#xE74D;" Command="{Binding LimparAtalhoCommand}" ToolTip="Remover atalho" />
                 </Grid>
 
-                <!-- Atalho ativo/inativo (antes ficava na lista, agora só se edita aqui) -->
-                <Grid Margin="2,14,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ToggleButton Grid.Column="0" Style="{StaticResource ToggleSwitchSmall}"
-                                  VerticalAlignment="Center" IsChecked="{Binding Ativo, Mode=TwoWay}" />
-                    <TextBlock Grid.Column="1" Text="Atalho ativo" Foreground="{StaticResource TextSecondaryBrush}"
-                               FontSize="13" VerticalAlignment="Center" Margin="10,0,0,0" />
-                </Grid>
-
-                <!-- Erro -->
-                <Border Background="#3A1F26" CornerRadius="9" Padding="14,10" Margin="0,16,0,0"
-                        Visibility="{Binding Erro, Converter={StaticResource StringToVis}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE783;" FontFamily="{StaticResource IconFont}" FontSize="15"
-                                   Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
-                        <TextBlock Text="{Binding Erro}" Foreground="{StaticResource DangerBrush}"
-                                   TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <!-- Atalho ativo/inativo (antes ficava na lista, agora só se edita aqui) -->
+                        <Grid Margin="2,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ToggleButton Grid.Column="0" Style="{StaticResource ToggleSwitchSmall}"
+                                          VerticalAlignment="Center" IsChecked="{Binding Ativo, Mode=TwoWay}" />
+                            <TextBlock Grid.Column="1" Text="Exibir na barra flutuante" Foreground="{StaticResource TextSecondaryBrush}"
+                                       FontSize="13" VerticalAlignment="Center" Margin="10,0,0,0" />
+                        </Grid>
                     </StackPanel>
-                </Border>
-            </StackPanel>
-            </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+            <!-- Erro: visível independentemente da aba selecionada -->
+            <Border Grid.Row="2" Background="#3A1F26" CornerRadius="9" Padding="14,10" Margin="0,16,0,0"
+                    Visibility="{Binding Erro, Converter={StaticResource StringToVis}}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE783;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                               Foreground="{StaticResource DangerBrush}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBlock Text="{Binding Erro}" Foreground="{StaticResource DangerBrush}"
+                               TextWrapping="Wrap" VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
 
             <!-- Rodapé: cancelar · excluir (só ao editar) · salvar -->
-            <Grid Grid.Row="2" Margin="0,24,0,0">
+            <Grid Grid.Row="3" Margin="0,24,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />

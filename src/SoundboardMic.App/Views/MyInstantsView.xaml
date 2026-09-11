@@ -46,9 +46,8 @@
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1" CornerRadius="9" Height="42" Width="320" HorizontalAlignment="Left"
-                    ClipToBounds="True">
-                <Grid>
+                    BorderThickness="1" CornerRadius="9" Height="42" Width="320" HorizontalAlignment="Left">
+                <Grid ClipToBounds="True">
                     <TextBox Style="{StaticResource AppTextBox}" Background="Transparent" BorderThickness="0"
                              Padding="38,0,12,0" VerticalContentAlignment="Center"
                              Text="{Binding Termo, UpdateSourceTrigger=PropertyChanged}">

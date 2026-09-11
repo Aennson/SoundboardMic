@@ -199,9 +199,8 @@
                                 WindowChrome.IsHitTestVisibleInChrome="True">
                         <!-- Busca -->
                         <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                BorderThickness="1" CornerRadius="9" Width="220" Height="42" Margin="0,0,10,0"
-                                ClipToBounds="True">
-                            <Grid>
+                                BorderThickness="1" CornerRadius="9" Width="220" Height="42" Margin="0,0,10,0">
+                            <Grid ClipToBounds="True">
                                 <TextBox Style="{StaticResource AppTextBox}" Background="Transparent" BorderThickness="0"
                                          Padding="38,0,12,0" Text="{Binding Filtro, UpdateSourceTrigger=PropertyChanged}"
                                          VerticalContentAlignment="Center" />

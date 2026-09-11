@@ -72,6 +72,7 @@ public partial class App : Application
         services.AddSingleton<DatabaseBootstrapper>();
         services.AddSingleton<IAudioRepository, AudioRepository>();
         services.AddSingleton<IMapeamentoRepository, MapeamentoRepository>();
+        services.AddSingleton<ICategoriaRepository, CategoriaRepository>();
 
         // Áudio / teclado
         services.AddSingleton<IAudioDeviceService, AudioDeviceService>();

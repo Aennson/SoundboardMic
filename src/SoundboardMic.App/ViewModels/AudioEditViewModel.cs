@@ -1,3 +1,4 @@
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SoundboardMic.App.Services;
@@ -9,17 +10,19 @@ using SoundboardMic.Core.Repositories;
 namespace SoundboardMic.App.ViewModels;
 
 /// <summary>
-/// ViewModel do editor de áudio (novo ou edição): nome, arquivo, volume, preview e
-/// gravação de atalho, com validação de conflito de teclas.
+/// ViewModel do editor de áudio (novo ou edição): nome, arquivo, volume, categoria,
+/// preview e gravação de atalho, com validação de conflito de teclas.
 /// </summary>
 public partial class AudioEditViewModel : ObservableObject
 {
     private readonly IAudioRepository _audioRepo;
     private readonly IMapeamentoRepository _mapeamentoRepo;
+    private readonly ICategoriaRepository _categoriaRepo;
     private readonly IDialogService _dialogs;
     private readonly IPlaybackService _preview;
     private readonly ISettingsService _settings;
     private readonly AudioFileCache _fileCache;
+    private readonly IReadOnlyList<Categoria> _categoriasDisponiveis;
 
     private readonly Audio? _existing;
     private readonly Mapeamento? _existingMapeamento;
@@ -31,18 +34,22 @@ public partial class AudioEditViewModel : ObservableObject
     public AudioEditViewModel(
         IAudioRepository audioRepo,
         IMapeamentoRepository mapeamentoRepo,
+        ICategoriaRepository categoriaRepo,
         IDialogService dialogs,
         IPlaybackService preview,
         ISettingsService settings,
         AudioFileCache fileCache,
+        IReadOnlyList<Categoria> categoriasDisponiveis,
         AudioItemViewModel? editing)
     {
         _audioRepo = audioRepo;
         _mapeamentoRepo = mapeamentoRepo;
+        _categoriaRepo = categoriaRepo;
         _dialogs = dialogs;
         _preview = preview;
         _settings = settings;
         _fileCache = fileCache;
+        _categoriasDisponiveis = categoriasDisponiveis;
 
         _existing = editing?.Audio;
         _existingMapeamento = editing?.Mapeamento;
@@ -53,6 +60,7 @@ public partial class AudioEditViewModel : ObservableObject
             _caminhoArquivo = editing.Audio.CaminhoArquivo;
             _volume = editing.Audio.VolumePadrao;
             _teclas = editing.Mapeamento?.Teclas ?? string.Empty;
+            _categoriaTexto = categoriasDisponiveis.FirstOrDefault(c => c.Id == editing.Audio.CategoriaId)?.Nome ?? string.Empty;
         }
 
         // Null (legado/novo) vira o padrão do catálogo — a UI sempre tem uma seleção.
@@ -63,6 +71,9 @@ public partial class AudioEditViewModel : ObservableObject
 
     public IReadOnlyList<IconOption> Glifos => IconCatalog.Glifos;
     public IReadOnlyList<CorOption> Cores => IconCatalog.Cores;
+
+    /// <summary>Nomes de categorias já cadastradas, exibidos como sugestões rápidas.</summary>
+    public IReadOnlyList<string> CategoriasDisponiveis => _categoriasDisponiveis.Select(c => c.Nome).ToList();
 
     public bool IsEdicao => _existing is not null;
     public string Titulo => IsEdicao ? "Editar áudio" : "Novo áudio";
@@ -91,6 +102,11 @@ public partial class AudioEditViewModel : ObservableObject
     [ObservableProperty]
     private string? _cor;
 
+    /// <summary>Nome da categoria escolhida (livre — cria uma nova se não existir ainda).
+    /// Vazio = sem categoria.</summary>
+    [ObservableProperty]
+    private string _categoriaTexto = string.Empty;
+
     /// <summary>Atalho gravado (canônico) ou vazio.</summary>
     [ObservableProperty]
     private string _teclas = string.Empty;
@@ -116,6 +132,9 @@ public partial class AudioEditViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(Nome) && !string.IsNullOrEmpty(value))
             Nome = System.IO.Path.GetFileNameWithoutExtension(value);
     }
+
+    [RelayCommand]
+    private void SelecionarCategoria(string? nome) => CategoriaTexto = nome ?? string.Empty;
 
     [RelayCommand]
     private void SelecionarIcone(string? codigo) => Icone = codigo;
@@ -244,6 +263,20 @@ public partial class AudioEditViewModel : ObservableObject
             audio.Icone = Icone;
             audio.Cor = Cor;
 
+            var novaCategoriaId = await ResolverCategoriaAsync();
+            if (novaCategoriaId != audio.CategoriaId)
+            {
+                // Mudou de categoria (ou saiu do "sem categoria"): entra por último na
+                // seção de destino, para não colidir com a ordem de itens já existentes.
+                var todos = await _audioRepo.GetAllAsync();
+                audio.Ordem = todos
+                    .Where(a => a.CategoriaId == novaCategoriaId && a.Id != audio.Id)
+                    .Select(a => a.Ordem)
+                    .DefaultIfEmpty(-1)
+                    .Max() + 1;
+            }
+            audio.CategoriaId = novaCategoriaId;
+
             // Arquivo novo (áudio recém-criado ou "Procurar" usado na edição): importa o
             // conteúdo para o banco e materializa uma cópia própria em cache — a partir
             // daqui, tocar o som não depende mais do arquivo original escolhido pelo usuário.
@@ -280,6 +313,26 @@ public partial class AudioEditViewModel : ObservableObject
         {
             Erro = $"Falha ao salvar: {ex.Message}";
         }
+    }
+
+    /// <summary>
+    /// Resolve o texto de categoria digitado/escolhido para um Id existente (comparação
+    /// sem distinguir maiúsculas/minúsculas) ou cria uma categoria nova, se ainda não
+    /// existir. Texto vazio significa "sem categoria".
+    /// </summary>
+    private async Task<long?> ResolverCategoriaAsync()
+    {
+        var nome = CategoriaTexto?.Trim();
+        if (string.IsNullOrEmpty(nome))
+            return null;
+
+        var existente = _categoriasDisponiveis.FirstOrDefault(
+            c => string.Equals(c.Nome, nome, StringComparison.OrdinalIgnoreCase));
+        if (existente is not null)
+            return existente.Id;
+
+        var nova = await _categoriaRepo.AddAsync(new Categoria { Nome = nome });
+        return nova.Id;
     }
 
     private async Task SalvarMapeamentoAsync(long audioId, KeyCombo? combo)

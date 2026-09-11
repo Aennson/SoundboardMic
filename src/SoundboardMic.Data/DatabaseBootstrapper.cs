@@ -35,6 +35,12 @@ public class DatabaseBootstrapper
             );
 
             CREATE INDEX IF NOT EXISTS IX_Mapeamentos_AudioId ON Mapeamentos(AudioId);
+
+            CREATE TABLE IF NOT EXISTS Categorias (
+                Id    INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nome  TEXT    NOT NULL,
+                Ordem INTEGER NOT NULL DEFAULT 0
+            );
             """;
         await command.ExecuteNonQueryAsync(ct);
 
@@ -45,6 +51,9 @@ public class DatabaseBootstrapper
         // só do caminho externo escolhido pelo usuário — ver AudioFileCache no App.
         await EnsureColumnAsync(connection, "Audios", "ArquivoConteudo", "BLOB NULL", ct);
         await EnsureColumnAsync(connection, "Audios", "ArquivoNomeOriginal", "TEXT NULL", ct);
+        // Organização em categorias/grupos, com ordem própria por categoria e por áudio.
+        await EnsureColumnAsync(connection, "Audios", "CategoriaId", "INTEGER NULL REFERENCES Categorias(Id) ON DELETE SET NULL", ct);
+        await EnsureColumnAsync(connection, "Audios", "Ordem", "INTEGER NOT NULL DEFAULT 0", ct);
     }
 
     /// <summary>

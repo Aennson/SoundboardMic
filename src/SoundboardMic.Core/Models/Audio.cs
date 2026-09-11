@@ -40,6 +40,15 @@ public class Audio
     /// <summary>Cor de fundo do botão na barra rápida ("#RRGGBB"). Null = padrão.</summary>
     public string? Cor { get; set; }
 
+    /// <summary>
+    /// Categoria/grupo ao qual o áudio pertence. Null = sem categoria — esses áudios
+    /// aparecem numa seção própria, sempre depois de todas as categorias.
+    /// </summary>
+    public long? CategoriaId { get; set; }
+
+    /// <summary>Posição de exibição dentro da categoria (crescente).</summary>
+    public int Ordem { get; set; }
+
     /// <summary>Data/hora de criação em UTC.</summary>
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 }

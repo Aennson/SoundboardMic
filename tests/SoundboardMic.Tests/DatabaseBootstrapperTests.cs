@@ -63,15 +63,27 @@ public sealed class DatabaseBootstrapperTests : IDisposable
 
             Assert.Contains("Icone", colunas);
             Assert.Contains("Cor", colunas);
+            Assert.Contains("CategoriaId", colunas);
+            Assert.Contains("Ordem", colunas);
         }
 
-        // A linha antiga sobreviveu e lê com Icone/Cor nulos.
+        // A tabela de categorias também foi criada.
+        await using (var connection = await factory.OpenAsync())
+        {
+            await using var pragma = connection.CreateCommand();
+            pragma.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Categorias';";
+            Assert.NotNull(await pragma.ExecuteScalarAsync());
+        }
+
+        // A linha antiga sobreviveu e lê com Icone/Cor/Categoria nulos e Ordem padrão.
         var repo = new AudioRepository(factory);
         var todos = await repo.GetAllAsync();
         var antigo = Assert.Single(todos);
         Assert.Equal("Antigo", antigo.Nome);
         Assert.Null(antigo.Icone);
         Assert.Null(antigo.Cor);
+        Assert.Null(antigo.CategoriaId);
+        Assert.Equal(0, antigo.Ordem);
 
         // E aceita gravar ícone/cor depois da migração.
         antigo.Icone = "E8D6";

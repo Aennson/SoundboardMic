@@ -60,6 +60,46 @@ public class AudioRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task Add_ComCategoriaEOrdem_FazRoundTrip()
+    {
+        var categoria = await new CategoriaRepository(_db.Factory).AddAsync(new Categoria { Nome = "Memes" });
+        var audio = NovoAudio();
+        audio.CategoriaId = categoria.Id;
+        audio.Ordem = 3;
+
+        await _repo.AddAsync(audio);
+        var lido = await _repo.GetByIdAsync(audio.Id);
+
+        Assert.Equal(categoria.Id, lido!.CategoriaId);
+        Assert.Equal(3, lido.Ordem);
+    }
+
+    [Fact]
+    public async Task Add_SemCategoria_CategoriaIdENuloEOrdemPadraoZero()
+    {
+        var audio = await _repo.AddAsync(NovoAudio());
+        var lido = await _repo.GetByIdAsync(audio.Id);
+
+        Assert.Null(lido!.CategoriaId);
+        Assert.Equal(0, lido.Ordem);
+    }
+
+    [Fact]
+    public async Task Update_AlteraCategoriaEOrdem()
+    {
+        var categoria = await new CategoriaRepository(_db.Factory).AddAsync(new Categoria { Nome = "Trilhas" });
+        var audio = await _repo.AddAsync(NovoAudio());
+
+        audio.CategoriaId = categoria.Id;
+        audio.Ordem = 7;
+        await _repo.UpdateAsync(audio);
+
+        var lido = await _repo.GetByIdAsync(audio.Id);
+        Assert.Equal(categoria.Id, lido!.CategoriaId);
+        Assert.Equal(7, lido.Ordem);
+    }
+
+    [Fact]
     public async Task Update_AlteraIconeECor()
     {
         var audio = await _repo.AddAsync(NovoAudio());

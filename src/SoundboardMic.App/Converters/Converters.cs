@@ -19,11 +19,15 @@ public class BoolToVisibilityConverter : IValueConverter
         value is Visibility.Visible;
 }
 
-/// <summary>string vazia/null → Collapsed; com conteúdo → Visible.</summary>
+/// <summary>string vazia/null → Collapsed; com conteúdo → Visible. Parâmetro "invert" inverte.</summary>
 public class StringToVisibilityConverter : IValueConverter
 {
-    public object Convert(object value, Type t, object? p, CultureInfo c) =>
-        string.IsNullOrWhiteSpace(value as string) ? Visibility.Collapsed : Visibility.Visible;
+    public object Convert(object value, Type t, object? p, CultureInfo c)
+    {
+        var temConteudo = !string.IsNullOrWhiteSpace(value as string);
+        if (p as string == "invert") temConteudo = !temConteudo;
+        return temConteudo ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     public object ConvertBack(object value, Type t, object? p, CultureInfo c) =>
         Binding.DoNothing;

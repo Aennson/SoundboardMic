@@ -46,7 +46,8 @@
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="1" CornerRadius="9" Height="42" MaxWidth="360" HorizontalAlignment="Left">
+                    BorderThickness="1" CornerRadius="9" Height="42" Width="320" HorizontalAlignment="Left"
+                    ClipToBounds="True">
                 <Grid>
                     <TextBox Style="{StaticResource AppTextBox}" Background="Transparent" BorderThickness="0"
                              Padding="38,0,12,0" VerticalContentAlignment="Center"
@@ -59,7 +60,8 @@
                                Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"
                                Margin="14,0,0,0" IsHitTestVisible="False" />
                     <TextBlock Text="Buscar no myinstants.com…" Foreground="{StaticResource TextMutedBrush}"
-                               VerticalAlignment="Center" Margin="38,0,0,0" IsHitTestVisible="False"
+                               VerticalAlignment="Center" Margin="38,0,12,0" IsHitTestVisible="False"
+                               TextTrimming="CharacterEllipsis"
                                Visibility="{Binding Termo, Converter={StaticResource StringToVis}, ConverterParameter=invert}" />
                 </Grid>
             </Border>

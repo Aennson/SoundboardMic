@@ -159,6 +159,9 @@
                             <Ellipse.Effect>
                                 <DropShadowEffect BlurRadius="16" ShadowDepth="0" Color="#7C5CFF" Opacity="0.5" />
                             </Ellipse.Effect>
+                            <Ellipse.CacheMode>
+                                <BitmapCache EnableClearType="False" SnapsToDevicePixels="True" RenderAtScale="1" />
+                            </Ellipse.CacheMode>
                         </Ellipse>
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
@@ -194,6 +197,9 @@
                             <Ellipse.Effect>
                                 <DropShadowEffect BlurRadius="16" ShadowDepth="0" Color="#FF5C6C" Opacity="0.45" />
                             </Ellipse.Effect>
+                            <Ellipse.CacheMode>
+                                <BitmapCache EnableClearType="False" SnapsToDevicePixels="True" RenderAtScale="1" />
+                            </Ellipse.CacheMode>
                         </Ellipse>
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
@@ -223,6 +229,14 @@
         <Setter Property="RenderTransform">
             <Setter.Value>
                 <TranslateTransform X="0" Y="0" />
+            </Setter.Value>
+        </Setter>
+        <!-- Cacheia o card inteiro (incl. os botões com DropShadowEffect) como um bitmap:
+             rolar a grade passa a mover bitmaps já prontos em vez de re-renderizar
+             vetores/blur a cada frame — essencial para manter 60fps com muitos cards. -->
+        <Setter Property="CacheMode">
+            <Setter.Value>
+                <BitmapCache EnableClearType="False" SnapsToDevicePixels="True" RenderAtScale="1" />
             </Setter.Value>
         </Setter>
         <Style.Triggers>

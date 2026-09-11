@@ -11,10 +11,13 @@
         <!-- Grade de cards de som, agrupada em seções por categoria (cada categoria ocupa
              uma linha inteira e cresce para baixo; responsiva via WrapPanel interno). -->
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
-            <ItemsControl ItemsSource="{Binding Grupos}">
+            <ItemsControl ItemsSource="{Binding Grupos}"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          VirtualizingPanel.ScrollUnit="Pixel">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Vertical" />
+                        <VirtualizingStackPanel Orientation="Vertical" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
 

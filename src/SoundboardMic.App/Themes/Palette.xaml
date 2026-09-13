@@ -20,6 +20,20 @@
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
     <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrongColor}" />
 
+    <!-- ==== Fluent semantic tokens ==== -->
+    <Color x:Key="FluentAccentColor">#4DD8E6</Color>
+    <Color x:Key="FluentAccentHoverColor">#72E3EE</Color>
+    <Color x:Key="FluentSurfaceColor">#252838</Color>
+    <Color x:Key="FluentSurfaceHoverColor">#2F3347</Color>
+    <Color x:Key="FluentSurfaceActiveColor">#212433</Color>
+    <Color x:Key="FluentFocusColor">#4DD8E6</Color>
+    <SolidColorBrush x:Key="FluentAccentBrush" Color="{StaticResource FluentAccentColor}" />
+    <SolidColorBrush x:Key="FluentAccentHoverBrush" Color="{StaticResource FluentAccentHoverColor}" />
+    <SolidColorBrush x:Key="FluentSurfaceBrush" Color="{StaticResource FluentSurfaceColor}" />
+    <SolidColorBrush x:Key="FluentSurfaceHoverBrush" Color="{StaticResource FluentSurfaceHoverColor}" />
+    <SolidColorBrush x:Key="FluentSurfaceActiveBrush" Color="{StaticResource FluentSurfaceActiveColor}" />
+    <SolidColorBrush x:Key="FocusBrush" Color="{StaticResource FluentFocusColor}" />
+
     <!-- ==== Texto ==== -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F4F4F8" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9A9AAE" />

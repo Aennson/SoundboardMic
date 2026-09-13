@@ -8,9 +8,74 @@
              FontFamily="{StaticResource AppFont}">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Rota de áudio: mantém a origem e o destino sempre visíveis antes dos cards. -->
+        <Border Grid.Row="0" Margin="0,0,8,16" Padding="14,10"
+                Background="{StaticResource FluentSurfaceActiveBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                CornerRadius="{StaticResource CornerControl}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="ROTA DE ÁUDIO" Style="{StaticResource Caption}"
+                               FontWeight="SemiBold" Foreground="{StaticResource FluentAccentBrush}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
+                        <Border Padding="8,4" Background="{StaticResource BgBaseBrush}"
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="{StaticResource CornerControl}">
+                            <TextBlock Text="{Binding MicDeviceName}" Foreground="{StaticResource TextPrimaryBrush}"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="170" />
+                        </Border>
+                        <TextBlock Text="&#xE72A;" Style="{StaticResource Glyph}" FontSize="12"
+                                   Foreground="{StaticResource TextMutedBrush}" Margin="8,0" />
+                        <Border Padding="8,4" Background="{StaticResource BgBaseBrush}"
+                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="{StaticResource CornerControl}">
+                            <TextBlock Text="{Binding OutputDeviceName}" Foreground="{StaticResource TextPrimaryBrush}"
+                                       TextTrimming="CharacterEllipsis" MaxWidth="170" />
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                            Margin="16,0,0,0">
+                    <Ellipse Width="8" Height="8" Margin="0,0,7,0">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{StaticResource WarningBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CableDetected}" Value="True">
+                                        <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="VB-Cable não encontrado" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CableDetected}" Value="True">
+                                        <Setter Property="Text" Value="CABLE Input pronto" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- Grade de cards de som, agrupada em seções por categoria (cada categoria ocupa
              uma linha inteira e cresce para baixo; responsiva via WrapPanel interno). -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,8,0">
             <ItemsControl ItemsSource="{Binding Grupos}"
                           VirtualizingPanel.IsVirtualizing="True"
                           VirtualizingPanel.VirtualizationMode="Recycling"
@@ -37,10 +102,12 @@
                                             Visibility="{Binding SemCategoria, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
                                     <Button Style="{StaticResource IconButton}" Content="&#xE70E;" Width="28" Height="28"
                                             FontSize="11"
+                                            AutomationProperties.Name="Mover categoria para cima"
                                             Command="{Binding DataContext.MoverCategoriaAcimaCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                             CommandParameter="{Binding}" ToolTip="Mover categoria para cima" />
                                     <Button Style="{StaticResource IconButton}" Content="&#xE70D;" Width="28" Height="28"
                                             FontSize="11" Margin="4,0,0,0"
+                                            AutomationProperties.Name="Mover categoria para baixo"
                                             Command="{Binding DataContext.MoverCategoriaAbaixoCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                             CommandParameter="{Binding}" ToolTip="Mover categoria para baixo" />
                                 </StackPanel>
@@ -114,14 +181,17 @@
                                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
                                                         <Button Style="{StaticResource IconButton}" Content="&#xE70E;"
                                                                 Width="24" Height="24" FontSize="9"
+                                                                AutomationProperties.Name="Mover áudio para cima"
                                                                 Command="{Binding DataContext.MoverAudioAcimaCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                 CommandParameter="{Binding}" ToolTip="Mover para cima" />
                                                         <Button Style="{StaticResource IconButton}" Content="&#xE70D;"
                                                                 Width="24" Height="24" FontSize="9" Margin="2,0,0,0"
+                                                                AutomationProperties.Name="Mover áudio para baixo"
                                                                 Command="{Binding DataContext.MoverAudioAbaixoCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                 CommandParameter="{Binding}" ToolTip="Mover para baixo" />
                                                         <Button Style="{StaticResource IconButton}" Content="&#xE70F;"
                                                                 Width="24" Height="24" FontSize="12" Margin="2,0,0,0"
+                                                                AutomationProperties.Name="Editar áudio"
                                                                 Command="{Binding DataContext.EditarAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                 CommandParameter="{Binding}" ToolTip="Editar" />
                                                     </StackPanel>
@@ -183,11 +253,13 @@
 
                                                     <Button Grid.Column="0" Style="{StaticResource PlayButton}" Width="36" Height="36"
                                                             FontSize="14" HorizontalAlignment="Center" Content="&#xE768;"
+                                                            AutomationProperties.Name="Tocar áudio"
                                                             Command="{Binding DataContext.TocarAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                             CommandParameter="{Binding}" ToolTip="Tocar (nova instância)" />
 
                                                     <Button Grid.Column="2" Style="{StaticResource StopButton}" Width="36" Height="36"
                                                             FontSize="13" HorizontalAlignment="Center"
+                                                            AutomationProperties.Name="Parar áudio"
                                                             Command="{Binding DataContext.PararAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                             CommandParameter="{Binding}" ToolTip="Parar este som" />
                                                 </Grid>
@@ -203,7 +275,7 @@
         </ScrollViewer>
 
         <!-- Estado vazio -->
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
                     Visibility="{Binding ListaVazia, Converter={StaticResource BoolToVis}}">
             <Border Width="96" Height="96" CornerRadius="24" Background="{StaticResource CardBrush}"
                     HorizontalAlignment="Center">
@@ -216,7 +288,8 @@
                        Style="{StaticResource Caption}" HorizontalAlignment="Center" MaxWidth="320"
                        TextAlignment="Center" TextWrapping="Wrap" />
             <Button Style="{StaticResource PrimaryButton}" Command="{Binding AdicionarAudioCommand}"
-                    HorizontalAlignment="Center" Margin="0,20,0,0" Width="180">
+                    HorizontalAlignment="Center" Margin="0,20,0,0" Width="180"
+                    AutomationProperties.Name="Adicionar áudio">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="15"
                                VerticalAlignment="Center" Margin="0,0,8,0" />

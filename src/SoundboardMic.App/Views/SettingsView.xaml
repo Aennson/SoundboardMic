@@ -18,6 +18,30 @@
         <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource H2}">
             <Setter Property="Margin" Value="0,0,0,4" />
         </Style>
+        <Style x:Key="VuMeter" TargetType="ProgressBar">
+            <Setter Property="Height" Value="8" />
+            <Setter Property="Background" Value="{StaticResource BorderBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4" />
+                            <Border HorizontalAlignment="Left" Background="{TemplateBinding Foreground}"
+                                    CornerRadius="4">
+                                <Border.Width>
+                                    <MultiBinding Converter="{StaticResource SliderFill}">
+                                        <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}" />
+                                        <Binding Path="Maximum" RelativeSource="{RelativeSource TemplatedParent}" />
+                                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}" />
+                                    </MultiBinding>
+                                </Border.Width>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
@@ -87,6 +111,8 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
+                                <TextBlock Text="{Binding CableNome}" Style="{StaticResource Caption}"
+                                           Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
                             </StackPanel>
                             <Button Style="{StaticResource IconButton}" Content="&#xE72C;" HorizontalAlignment="Right"
                                     Command="{Binding RefreshDevicesCommand}" ToolTip="Atualizar dispositivos"
@@ -123,6 +149,26 @@
                                    Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" HorizontalAlignment="Right" />
                     </Grid>
                     <Slider Style="{StaticResource AppSlider}" Minimum="0" Maximum="2" Value="{Binding MicVolume, Mode=TwoWay}" />
+
+                    <Border Margin="0,14,0,0" Padding="12,10"
+                            Background="{StaticResource BgBaseBrush}" BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="{StaticResource CornerControl}"
+                            AutomationProperties.Name="Medidor de nível do microfone">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,7">
+                                <TextBlock Text="Nível do microfone" Style="{StaticResource Caption}" />
+                                <TextBlock Text="monitoramento" Style="{StaticResource Caption}"
+                                           HorizontalAlignment="Right" />
+                            </Grid>
+                            <ProgressBar Style="{StaticResource VuMeter}" Minimum="0" Maximum="2"
+                                         Value="{Binding MicVolume}" />
+                            <Grid Margin="0,5,0,0">
+                                <TextBlock Text="silêncio" Style="{StaticResource Caption}" FontSize="10" />
+                                <TextBlock Text="pico" Style="{StaticResource Caption}" FontSize="10"
+                                           HorizontalAlignment="Right" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
 
                     <Grid Margin="0,18,0,4">
                         <TextBlock Text="Soundboard (master)" Foreground="{StaticResource TextPrimaryBrush}" />

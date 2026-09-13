@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:SoundboardMic.App.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:AudioEditViewModel}"
-        Title="Editar áudio" Height="560" Width="520"
+        Title="Editar áudio" Height="560" Width="680"
         WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent"
         FontFamily="{StaticResource AppFont}">
@@ -156,7 +156,31 @@
             <!-- Conteúdo em abas: evita rolagem lateral, cada aba cabe inteira na janela -->
             <TabControl Grid.Row="1" Style="{StaticResource DialogTabControl}">
                 <TabItem Header="PRINCIPAL">
-                    <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="220" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,18,0">
+                        <Grid Margin="0,0,0,18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="IDENTIDADE DO ÁUDIO" Style="{StaticResource Caption}"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Prévia da cor e do ícone usados na barra rápida."
+                                           Style="{StaticResource Caption}" Margin="0,4,0,0"
+                                           TextWrapping="Wrap" MaxWidth="250" />
+                            </StackPanel>
+                            <Border Grid.Column="1" Width="56" Height="56" CornerRadius="15"
+                                    Background="{Binding Cor, Converter={StaticResource HexToBrush}}"
+                                    AutomationProperties.Name="Prévia do ícone e da cor">
+                                <TextBlock Text="{Binding Icone, Converter={StaticResource CodepointToGlyph}}"
+                                           Style="{StaticResource Glyph}" FontSize="24" Foreground="White" />
+                            </Border>
+                        </Grid>
 
                         <TextBlock Text="NOME" Style="{StaticResource Caption}" FontWeight="SemiBold" Margin="2,0,0,6" />
                         <TextBox Style="{StaticResource AppTextBox}"
@@ -204,7 +228,8 @@
                             <Slider Grid.Column="1" Style="{StaticResource AppSlider}" Minimum="0" Maximum="2"
                                     Value="{Binding Volume, Mode=TwoWay}" />
                             <Button Grid.Column="2" Style="{StaticResource PlayButton}" Width="40" Height="40" Margin="12,0,0,0"
-                                    Command="{Binding PreviewCommand}" Content="&#xE768;" ToolTip="Ouvir prévia (nos fones)" />
+                                    Command="{Binding PreviewCommand}" Content="&#xE768;" ToolTip="Ouvir prévia (nos fones)"
+                                    AutomationProperties.Name="Testar volume e ouvir prévia" />
                         </Grid>
 
                         <!-- Categoria/grupo de organização -->
@@ -229,7 +254,35 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </StackPanel>
+                        </StackPanel>
+                        <Border Grid.Column="1" Style="{StaticResource Card}" Padding="16"
+                                VerticalAlignment="Top">
+                            <StackPanel>
+                                <TextBlock Text="PRÉVIA" Style="{StaticResource Caption}"
+                                           FontWeight="SemiBold" />
+                                <Border Width="76" Height="76" CornerRadius="20" Margin="0,14,0,12"
+                                        HorizontalAlignment="Center"
+                                        Background="{Binding Cor, Converter={StaticResource HexToBrush}}">
+                                    <TextBlock Text="{Binding Icone, Converter={StaticResource CodepointToGlyph}}"
+                                               Style="{StaticResource Glyph}" FontSize="32" Foreground="White" />
+                                </Border>
+                                <TextBlock Text="{Binding Nome}" Style="{StaticResource H2}"
+                                           TextAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Volume, Converter={StaticResource VolToPercent}}"
+                                           Style="{StaticResource Caption}" HorizontalAlignment="Center"
+                                           Margin="0,4,0,14" />
+                                <Button Style="{StaticResource SecondaryButton}" Height="36"
+                                        Command="{Binding PreviewCommand}"
+                                        AutomationProperties.Name="Testar volume da prévia">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE768;" FontFamily="{StaticResource IconFont}"
+                                                   FontSize="14" Margin="0,0,7,0" />
+                                        <TextBlock Text="Testar áudio" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </TabItem>
 
                 <TabItem Header="MAIS OPÇÕES">

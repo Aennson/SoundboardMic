@@ -12,9 +12,12 @@
         ResizeMode="NoResize" SizeToContent="WidthAndHeight" Focusable="False"
         FontFamily="{StaticResource AppFont}">
 
-    <Border Background="{StaticResource BgLayerBrush}"
+    <Border Background="{StaticResource FluentSurfaceBrush}"
             BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1"
-            CornerRadius="12" Padding="3">
+        CornerRadius="{StaticResource CornerCard}" Padding="8">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="6" Opacity="0.55" Color="Black" />
+        </Border.Effect>
         <Border.ContextMenu>
             <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                 <MenuItem Header="Horizontal" IsChecked="{Binding Horizontal, Mode=OneWay}"
@@ -32,7 +35,8 @@
             <!-- Alça de arrasto -->
             <Border x:Name="DragHandle" Background="Transparent" Cursor="SizeAll"
                     MouseLeftButtonDown="DragHandle_MouseLeftButtonDown"
-                    ToolTip="Arraste para mover · botão direito para opções">
+                    ToolTip="Arraste para mover · botão direito para opções"
+                    AutomationProperties.Name="Alça para mover a barra rápida">
                 <TextBlock Text="&#xE712;" FontFamily="{StaticResource IconFont}" FontSize="12"
                            Foreground="{StaticResource TextMutedBrush}"
                            HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4" />
@@ -53,6 +57,7 @@
                                 Background="{Binding Cor, Converter={StaticResource HexToBrush}}"
                                 Content="{Binding Icone, Converter={StaticResource CodepointToGlyph}}"
                                 ToolTip="{Binding Nome}"
+                                AutomationProperties.Name="{Binding Nome}"
                                 Command="{Binding DataContext.TocarCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                 CommandParameter="{Binding}" />
                     </DataTemplate>
@@ -63,7 +68,8 @@
             <Button Style="{StaticResource IconButtonDanger}" Width="26" Height="26" FontSize="11"
                     Margin="2" VerticalAlignment="Center" HorizontalAlignment="Center"
                     Content="&#xE71A;" Foreground="{StaticResource TextMutedBrush}"
-                    Command="{Binding PanicoCommand}" ToolTip="Parar todos os sons" />
+                    Command="{Binding PanicoCommand}" ToolTip="Parar todos os sons"
+                    AutomationProperties.Name="Parar todos os sons" />
         </StackPanel>
     </Border>
 </Window>

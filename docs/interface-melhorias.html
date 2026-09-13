@@ -1,0 +1,2200 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Proposta detalhada de evolução de interface e acessibilidade para o SoundboardMic (WPF / Windows Desktop)."
+    />
+    <title>SoundboardMic — Design System & Proposta de UI Windows</title>
+    <style>
+      /* ==========================================================================
+         DESIGN SYSTEM: FLUENT DESKTOP (WINDOWS 11 NATIVE FEEL)
+         ========================================================================== */
+      :root {
+        color-scheme: dark;
+        --win-bg: #14151f;
+        --win-layer: #1c1e2b;
+        --win-card: #252838;
+        --win-card-hover: #2f3347;
+        --win-card-active: #212433;
+        --win-border: #363b52;
+        --win-border-strong: #4a516e;
+        --win-line: rgba(255, 255, 255, 0.08);
+
+        --text-primary: #f5f6fa;
+        --text-secondary: #c0c6d8;
+        --text-muted: #8892b0;
+
+        --accent: #7c5cff;
+        --accent-hover: #9175ff;
+        --accent-glow: rgba(124, 92, 255, 0.35);
+        --accent-gradient: linear-gradient(135deg, #8b6bff 0%, #5b8def 100%);
+        --accent-gradient-hover: linear-gradient(135deg, #9c80ff 0%, #6d9bff 100%);
+
+        --cyan: #4dd8e6;
+        --cyan-bg: #162c33;
+        --cyan-border: #23505c;
+
+        --success: #3dd68c;
+        --success-bg: #142e22;
+        --success-border: #1e4d35;
+
+        --warning: #ffb454;
+        --warning-bg: #332616;
+        --warning-border: #593f1f;
+
+        --danger: #ff5c6c;
+        --danger-hover: #ff7480;
+        --danger-bg: #381a22;
+        --danger-border: #5e2432;
+
+        --radius-sm: 6px;
+        --radius-md: 10px;
+        --radius-lg: 14px;
+        --radius-xl: 18px;
+
+        --shadow-window: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        --shadow-dialog: 0 30px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--win-border-strong);
+        --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.25);
+        --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--accent);
+        --focus-ring: 0 0 0 2px var(--win-bg), 0 0 0 4px var(--cyan);
+
+        font-family: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        background: #0b0c13;
+        color: var(--text-primary);
+        line-height: 1.5;
+        font-size: 14px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      h1, h2, h3, h4 {
+        font-family: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", sans-serif;
+      }
+
+      button, input, select, textarea {
+        font: inherit;
+        color: inherit;
+      }
+
+      button {
+        cursor: pointer;
+        border: none;
+        background: none;
+      }
+
+      button:focus-visible, input:focus-visible, a:focus-visible, select:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+      }
+
+      /* ==========================================================================
+         TOP BAR: NAVEGAÇÃO DE TELAS / PROPOSTA
+         ========================================================================== */
+      .app-switcher-bar {
+        background: #11131c;
+        border-bottom: 1px solid var(--win-border);
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .switcher-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .switcher-brand-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--accent-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        box-shadow: 0 4px 12px var(--accent-glow);
+      }
+
+      .switcher-brand-text h1 {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .switcher-brand-text span {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .view-pills {
+        display: flex;
+        background: var(--win-bg);
+        padding: 4px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--win-border);
+        gap: 4px;
+      }
+
+      .view-pill {
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        transition: all 0.15s ease;
+      }
+
+      .view-pill:hover {
+        color: var(--text-primary);
+        background: var(--win-card-hover);
+      }
+
+      .view-pill.active {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 2px 8px var(--accent-glow);
+      }
+
+      .switcher-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .btn-quick-modal {
+        background: var(--win-card);
+        border: 1px solid var(--win-border);
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--cyan);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s;
+      }
+      .btn-quick-modal:hover {
+        background: var(--cyan-bg);
+        border-color: var(--cyan);
+      }
+
+      /* ==========================================================================
+         CONTAINER DA JANELA WINDOWS WPF SIMULADA
+         ========================================================================== */
+      .desktop-stage {
+        flex: 1;
+        padding: 32px 24px 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+      }
+
+      .wpf-window-frame {
+        width: 100%;
+        max-width: 1160px;
+        min-height: 740px;
+        background: var(--win-bg);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--win-border-strong);
+        box-shadow: var(--shadow-window);
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* ==========================================================================
+         SIDEBAR DO SOUNDBOARDMIC
+         ========================================================================== */
+      .wpf-sidebar {
+        background: var(--win-layer);
+        border-right: 1px solid var(--win-line);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px 14px 16px;
+      }
+
+      .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 8px 24px;
+      }
+
+      .sidebar-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--accent-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        box-shadow: 0 4px 14px var(--accent-glow);
+      }
+
+      .sidebar-brand-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.2;
+      }
+      .sidebar-brand-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+      }
+
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.15s ease;
+      }
+
+      .sidebar-item:hover {
+        background: var(--win-card-hover);
+        color: var(--text-primary);
+      }
+
+      .sidebar-item.active {
+        background: #252838;
+        color: var(--text-primary);
+      }
+
+      .sidebar-icon {
+        font-size: 16px;
+        width: 20px;
+        text-align: center;
+        color: var(--accent);
+      }
+
+      /* Widget de status no rodapé da sidebar */
+      .sidebar-status-widget {
+        background: var(--win-card);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-md);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .status-header-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+        box-shadow: 0 0 0 3px var(--success-bg);
+      }
+      .status-pulse-dot.stopped {
+        background: var(--text-muted);
+        box-shadow: none;
+      }
+
+      .status-main-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .status-device-info {
+        font-size: 11px;
+        color: var(--text-muted);
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .status-device-info strong {
+        color: var(--text-secondary);
+      }
+
+      /* ==========================================================================
+         MAIN VIEWPORT (SHELL WPF)
+         ========================================================================== */
+      .wpf-main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        background: var(--win-bg);
+      }
+
+      /* Barra de título do Windows */
+      .win-titlebar {
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px 0 24px;
+        border-bottom: 1px solid var(--win-line);
+        user-select: none;
+      }
+
+      .win-title {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .win-caption-controls {
+        display: flex;
+        align-items: center;
+      }
+
+      .win-btn {
+        width: 44px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        font-size: 12px;
+        border-radius: var(--radius-sm);
+        transition: all 0.12s;
+      }
+      .win-btn:hover { background: var(--win-card-hover); color: var(--text-primary); }
+      .win-btn.close:hover { background: var(--danger); color: #fff; }
+
+      /* Top Header & Controles Globais */
+      .wpf-header-area {
+        padding: 20px 28px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .page-heading h2 {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .page-heading p {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .search-box-wpf {
+        position: relative;
+        width: 220px;
+      }
+
+      .search-box-wpf input {
+        width: 100%;
+        height: 38px;
+        background: var(--win-card);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-md);
+        padding: 0 12px 0 34px;
+        font-size: 13px;
+        color: var(--text-primary);
+        transition: all 0.15s ease;
+      }
+      .search-box-wpf input:focus {
+        border-color: var(--accent);
+        background: var(--win-card-hover);
+      }
+      .search-box-wpf .search-glyph {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 13px;
+        color: var(--text-muted);
+        pointer-events: none;
+      }
+
+      .btn-primary-wpf {
+        height: 38px;
+        padding: 0 16px;
+        border-radius: var(--radius-md);
+        background: var(--accent-gradient);
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px var(--accent-glow);
+        transition: all 0.15s ease;
+      }
+      .btn-primary-wpf:hover {
+        background: var(--accent-gradient-hover);
+        box-shadow: 0 6px 16px rgba(124, 92, 255, 0.5);
+      }
+
+      .btn-secondary-wpf {
+        height: 38px;
+        padding: 0 14px;
+        border-radius: var(--radius-md);
+        background: var(--win-card);
+        border: 1px solid var(--win-border);
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.15s ease;
+      }
+      .btn-secondary-wpf:hover {
+        background: var(--win-card-hover);
+        border-color: var(--win-border-strong);
+      }
+
+      .btn-panic-wpf {
+        height: 38px;
+        padding: 0 14px;
+        border-radius: var(--radius-md);
+        background: var(--danger-bg);
+        border: 1px solid var(--danger-border);
+        color: var(--danger);
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.15s;
+      }
+      .btn-panic-wpf:hover {
+        background: var(--danger);
+        color: #fff;
+      }
+
+      /* BANNER DE FLUXO & ROTA DE ÁUDIO INTEGRADO (A sugestão forte mantida) */
+      .audio-routing-status-banner {
+        margin: 0 28px 16px;
+        background: linear-gradient(90deg, #161a29 0%, #1e1b33 100%);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-md);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .routing-steps {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .routing-node {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--win-bg);
+        padding: 4px 10px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--win-line);
+        font-size: 12px;
+      }
+      .routing-node.active {
+        border-color: var(--cyan-border);
+        color: var(--cyan);
+      }
+      .routing-arrow {
+        color: var(--text-muted);
+        font-size: 11px;
+      }
+
+      .routing-btn-help {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--cyan);
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      /* ==========================================================================
+         CONTEÚDO PRINCIPAL: VIEWS COMUTÁVEIS
+         ========================================================================== */
+      .wpf-view-container {
+        padding: 0 28px 28px;
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .view-section {
+        display: none;
+      }
+      .view-section.active {
+        display: block;
+      }
+
+      /* --------------------------------------------------------------------------
+         TELA 1: MEUS SONS (SOUNDBOARD COM CATEGORIAS REAIS)
+         -------------------------------------------------------------------------- */
+      .category-section {
+        margin-bottom: 24px;
+      }
+
+      .category-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--win-line);
+      }
+
+      .category-title-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .category-title-group h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .category-badge {
+        background: var(--win-card);
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+        border: 1px solid var(--win-border);
+      }
+
+      .category-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .icon-tool-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        font-size: 11px;
+        transition: all 0.12s;
+      }
+      .icon-tool-btn:hover {
+        background: var(--win-card-hover);
+        color: var(--text-primary);
+      }
+
+      /* Grade de cards de som */
+      .sound-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 14px;
+      }
+
+      /* Card de som aprimorado */
+      .sound-card-pro {
+        background: var(--win-card);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-md);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 10px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.18s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sound-card-pro:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-card-hover);
+      }
+
+      .sound-card-pro.is-playing {
+        border-color: var(--cyan);
+        background: linear-gradient(180deg, var(--win-card) 0%, rgba(77, 216, 230, 0.08) 100%);
+      }
+
+      .card-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .card-icon-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #fff;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .card-menu-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        font-size: 13px;
+        transition: all 0.12s;
+      }
+      .card-menu-btn:hover {
+        background: var(--win-card-hover);
+        color: var(--text-primary);
+      }
+
+      .card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .card-sound-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .card-sound-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      /* Chip de hotkey */
+      .card-hotkey-chip {
+        background: var(--win-bg);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-sm);
+        padding: 3px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+      .card-hotkey-chip.has-hotkey {
+        border-color: rgba(124, 92, 255, 0.5);
+        color: #dcd3ff;
+        background: rgba(124, 92, 255, 0.12);
+      }
+
+      /* Controles de execução do card */
+      .card-play-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .btn-card-play {
+        height: 32px;
+        background: var(--accent);
+        border-radius: var(--radius-sm);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.12s;
+      }
+      .btn-card-play:hover {
+        background: var(--accent-hover);
+      }
+
+      .btn-card-stop {
+        width: 32px;
+        height: 32px;
+        background: var(--danger-bg);
+        border: 1px solid var(--danger-border);
+        border-radius: var(--radius-sm);
+        color: var(--danger);
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.12s;
+      }
+      .btn-card-stop:hover {
+        background: var(--danger);
+        color: #fff;
+      }
+
+      /* --------------------------------------------------------------------------
+         TELA 2: CONFIGURAÇÕES (SETTINGS VIEW)
+         -------------------------------------------------------------------------- */
+      .settings-grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 950px) {
+        .settings-grid-layout { grid-template-columns: 1fr; }
+      }
+
+      .settings-group-card {
+        background: var(--win-layer);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .settings-group-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .settings-group-title .grp-icon {
+        color: var(--accent);
+        font-size: 17px;
+      }
+
+      .setting-item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--win-line);
+      }
+      .setting-item-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .setting-label-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .setting-label-block strong {
+        font-size: 13px;
+        color: var(--text-primary);
+      }
+      .setting-label-block span {
+        font-size: 11px;
+        color: var(--text-muted);
+        line-height: 1.35;
+      }
+
+      /* Toggle Switch Fluent */
+      .win-toggle {
+        width: 44px;
+        height: 22px;
+        background: var(--win-card);
+        border: 1px solid var(--win-border-strong);
+        border-radius: 12px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+      .win-toggle.checked {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .win-toggle-thumb {
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border-radius: 50%;
+        position: absolute;
+        top: 3px;
+        left: 4px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .win-toggle.checked .win-toggle-thumb {
+        left: 24px;
+      }
+
+      /* Controles de Select / Combo */
+      .field-combo-block {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field-combo-block label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .win-select {
+        height: 38px;
+        background: var(--win-card);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-md);
+        padding: 0 12px;
+        color: var(--text-primary);
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      /* VU Meter / Teste de Microfone (Animação via transform/scaleX para GPU) */
+      .vu-meter-container {
+        background: var(--win-bg);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-md);
+        padding: 10px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .vu-meter-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+      .vu-meter-bar-track {
+        height: 8px;
+        background: var(--win-card);
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+      .vu-meter-bar-fill {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, var(--success) 0%, var(--warning) 75%, var(--danger) 100%);
+        border-radius: 4px;
+        transform-origin: left center;
+        transform: scaleX(0.62);
+        transition: transform 0.12s ease-out;
+      }
+
+      /* Slider com porcentagem */
+      .slider-control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .slider-label-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+      }
+      .slider-val {
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .win-range-slider {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+
+      /* --------------------------------------------------------------------------
+         TELA 3: MODAL DE EDIÇÃO DE ÁUDIO (AUDIO EDIT DIALOG)
+         -------------------------------------------------------------------------- */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        padding: 20px;
+      }
+      .modal-backdrop.open {
+        display: flex;
+      }
+
+      .audio-edit-dialog-pro {
+        width: 100%;
+        max-width: 640px;
+        background: var(--win-layer);
+        border: 1px solid var(--win-border-strong);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-dialog);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes modalScaleIn {
+        from { opacity: 0; transform: scale(0.96) translateY(8px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+
+      .dialog-header {
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--win-line);
+      }
+
+      .dialog-title-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .dialog-preview-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #ff5c6c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(255, 92, 108, 0.4);
+        transition: all 0.2s ease;
+      }
+
+      .dialog-title-group h3 {
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .dialog-title-group span {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .dialog-body {
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+
+      /* Grade em 2 colunas para o modal */
+      .dialog-2col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 580px) {
+        .dialog-2col { grid-template-columns: 1fr; }
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .form-group label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .win-input-text {
+        height: 38px;
+        background: var(--win-bg);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-md);
+        padding: 0 12px;
+        color: var(--text-primary);
+        font-size: 13px;
+        transition: border-color 0.15s;
+      }
+      .win-input-text:focus {
+        border-color: var(--accent);
+      }
+
+      /* Coletor de atalho ao vivo no modal */
+      .hotkey-record-box {
+        height: 44px;
+        background: var(--win-bg);
+        border: 1.5px solid var(--win-border);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 8px 0 14px;
+        transition: all 0.2s;
+      }
+      .hotkey-record-box.recording {
+        border-color: var(--accent);
+        background: rgba(124, 92, 255, 0.1);
+      }
+
+      .hotkey-display {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .hotkey-tag {
+        background: var(--win-card-hover);
+        border: 1px solid var(--win-border-strong);
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      /* Seletor de Ícones e Cores */
+      .icon-picker-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 6px;
+      }
+      .icon-choice-btn {
+        height: 34px;
+        background: var(--win-bg);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: var(--text-secondary);
+        transition: all 0.12s;
+      }
+      .icon-choice-btn:hover {
+        background: var(--win-card-hover);
+        color: var(--text-primary);
+      }
+      .icon-choice-btn.selected {
+        border-color: var(--accent);
+        background: rgba(124, 92, 255, 0.2);
+        color: var(--accent);
+      }
+
+      .color-palette-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .color-dot-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        transition: transform 0.15s, border-color 0.15s;
+      }
+      .color-dot-btn:hover {
+        transform: scale(1.15);
+      }
+      .color-dot-btn.selected {
+        border-color: #fff;
+        transform: scale(1.15);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+
+      .dialog-footer {
+        padding: 16px 24px;
+        background: var(--win-bg);
+        border-top: 1px solid var(--win-line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* --------------------------------------------------------------------------
+         TELA 4: QUICKBAR FLUTUANTE (BARRA RÁPIDA)
+         -------------------------------------------------------------------------- */
+      .quickbar-preview-card {
+        background: var(--win-layer);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .quickbar-floating-demo {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #1c1e2b;
+        border: 1px solid var(--win-border-strong);
+        border-radius: 12px;
+        padding: 4px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+      }
+
+      .quickbar-drag {
+        padding: 6px;
+        color: var(--text-muted);
+        cursor: grab;
+      }
+
+      .quickbar-btn-sound {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #fff;
+        transition: transform 0.1s;
+      }
+      .quickbar-btn-sound:hover {
+        transform: scale(1.08);
+      }
+
+      /* --------------------------------------------------------------------------
+         TELA 5: AUDITORIA DE ACESSIBILIDADE & SNIPPETS WPF
+         -------------------------------------------------------------------------- */
+      .a11y-audit-card {
+        background: var(--win-layer);
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .audit-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .audit-table th, .audit-table td {
+        padding: 10px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--win-line);
+      }
+      .audit-table th {
+        color: var(--text-muted);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 11px;
+      }
+
+      .code-snippet-box {
+        background: #0d0f17;
+        border: 1px solid var(--win-border);
+        border-radius: var(--radius-md);
+        padding: 14px;
+        font-family: "Cascadia Code", "Consolas", monospace;
+        font-size: 12px;
+        color: #c9d1d9;
+        overflow-x: auto;
+      }
+
+      /* Notificação toast simulada (Refinada sem side-tab) */
+      .toast-simulated {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--win-layer);
+        border: 1px solid var(--win-border-strong);
+        border-radius: var(--radius-md);
+        padding: 12px 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+        z-index: 300;
+      }
+      .toast-simulated.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      .toast-icon-wrapper {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--accent-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- BARRA SUPERIOR: SELETOR DE TELAS / PROPOSTA INTERATIVA -->
+    <header class="app-switcher-bar">
+      <div class="switcher-brand">
+        <div class="switcher-brand-icon">🎙️</div>
+        <div class="switcher-brand-text">
+          <h1>SoundboardMic — Proposta de UI Windows</h1>
+          <span>Avaliação com Impeccable Skill · WPF / Fluent Design</span>
+        </div>
+      </div>
+
+      <nav class="view-pills" aria-label="Navegar entre telas e componentes">
+        <button class="view-pill active" data-target="view-sounds">Meus Sons (Categorias)</button>
+        <button class="view-pill" data-target="view-settings">Configurações</button>
+        <button class="view-pill" data-target="view-quickbar">Barra Rápida</button>
+        <button class="view-pill" data-target="view-a11y">Acessibilidade & WPF</button>
+      </nav>
+
+      <div class="switcher-actions">
+        <button class="btn-quick-modal" id="btnOpenModalDirect">
+          <span>✎</span> Abrir Modal de Edição
+        </button>
+      </div>
+    </header>
+
+    <!-- ÁREA DE APRESENTAÇÃO DA JANELA WPF NATIVA -->
+    <main class="desktop-stage">
+      <div class="wpf-window-frame" role="region" aria-label="Janela principal do SoundboardMic">
+        
+        <!-- SIDEBAR DO APLICATIVO -->
+        <aside class="wpf-sidebar">
+          <div>
+            <div class="sidebar-brand">
+              <div class="sidebar-logo">🎙️</div>
+              <div>
+                <div class="sidebar-brand-title">SoundboardMic</div>
+                <div class="sidebar-brand-sub">injeção no microfone</div>
+              </div>
+            </div>
+
+            <nav class="sidebar-nav">
+              <button class="sidebar-item active" data-nav="view-sounds">
+                <span class="sidebar-icon">♫</span>
+                <span>Meus sons</span>
+              </button>
+              <button class="sidebar-item" data-nav="view-web">
+                <span class="sidebar-icon">🌐</span>
+                <span>Sons da web</span>
+              </button>
+              <button class="sidebar-item" data-nav="view-settings">
+                <span class="sidebar-icon">⚙</span>
+                <span>Configurações</span>
+              </button>
+            </nav>
+          </div>
+
+          <!-- STATUS DO MOTOR & DISPOSITIVOS NO RODAPÉ -->
+          <div class="sidebar-status-widget" aria-live="polite">
+            <div class="status-header-row">
+              <span class="status-pulse-dot" id="engineDot"></span>
+              <span class="status-main-label" id="engineStatusText">Injetando áudio</span>
+            </div>
+            <div class="status-device-info">
+              <strong>Mic:</strong> HyperX QuadCast (USB)
+            </div>
+            <div class="status-device-info">
+              <strong>Saída:</strong> CABLE Input (VB-Audio)
+            </div>
+          </div>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL DA JANELA -->
+        <div class="wpf-main">
+          <!-- BARRA DE TÍTULO CUSTOMIZADA DO WINDOWS -->
+          <div class="win-titlebar">
+            <span class="win-title">SoundboardMic</span>
+            <div class="win-caption-controls">
+              <button class="win-btn" title="Minimizar">─</button>
+              <button class="win-btn" title="Maximizar">□</button>
+              <button class="win-btn close" title="Fechar (Minimiza para a bandeja)">✕</button>
+            </div>
+          </div>
+
+          <!-- CABEÇALHO COM CONTROLES GLOBAIS -->
+          <div class="wpf-header-area">
+            <div class="page-heading">
+              <h2 id="pageTitle">Meus sons</h2>
+              <p id="pageSubtitle">Organize e dispare seus áudios por categorias e atalhos globais</p>
+            </div>
+
+            <div class="header-controls">
+              <div class="search-box-wpf" id="globalSearchContainer">
+                <span class="search-glyph">⌕</span>
+                <input type="search" id="soundFilterInput" placeholder="Buscar por nome ou atalho…" />
+              </div>
+
+              <button class="btn-panic-wpf" id="btnPanicAction" title="Interromper todos os áudios instantaneamente">
+                <span>■</span> Pânico
+              </button>
+
+              <button class="btn-secondary-wpf" id="btnToggleEngine">
+                <span id="engineToggleIcon">⏹</span>
+                <span id="engineToggleText">Parar injeção</span>
+              </button>
+
+              <button class="btn-primary-wpf" id="btnAddNewSound">
+                <span>＋</span> Adicionar áudio
+              </button>
+            </div>
+          </div>
+
+          <!-- BANNER DE ROTA DE ÁUDIO (MANTIDO E APRIMORADO) -->
+          <div class="audio-routing-status-banner">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 16px;">🎛️</span>
+              <div>
+                <strong style="font-size: 12px; color: var(--text-primary);">Fluxo de Injeção de Áudio</strong>
+                <div class="routing-steps">
+                  <span class="routing-node active">1. Mic Físico</span>
+                  <span class="routing-arrow">→</span>
+                  <span class="routing-node active">2. Soundboard Mix</span>
+                  <span class="routing-arrow">→</span>
+                  <span class="routing-node active">3. CABLE Input</span>
+                  <span class="routing-arrow">→</span>
+                  <span class="routing-node" style="border-color: var(--warning-border); color: var(--warning);">4. Discord/Teams (CABLE Output)</span>
+                </div>
+              </div>
+            </div>
+            <span class="routing-btn-help" id="btnOpenSetupGuide">Guia de rota</span>
+          </div>
+
+          <!-- ÁREA COM AS TELAS REAIS -->
+          <div class="wpf-view-container">
+
+            <!-- ================================================================
+                 TELA 1: MEUS SONS COM CATEGORIAS
+                 ================================================================ -->
+            <section class="view-section active" id="view-sounds">
+              
+              <!-- CATEGORIA 1: MEMES & EFEITOS -->
+              <div class="category-section" data-cat="memes">
+                <div class="category-header">
+                  <div class="category-title-group">
+                    <h3>Memes & Reações</h3>
+                    <span class="category-badge">3 sons</span>
+                  </div>
+                  <div class="category-actions">
+                    <button class="icon-tool-btn" title="Mover categoria para cima">▲</button>
+                    <button class="icon-tool-btn" title="Mover categoria para baixo">▼</button>
+                  </div>
+                </div>
+
+                <div class="sound-cards-grid">
+                  <!-- CARD 1 -->
+                  <article class="sound-card-pro" data-sound="risada plateia">
+                    <div class="card-top-row">
+                      <div class="card-icon-badge" style="background: #ff5c6c;">😂</div>
+                      <button class="card-menu-btn btn-edit-trigger" title="Editar áudio">✎</button>
+                    </div>
+                    <div class="card-body">
+                      <span class="card-sound-name" title="Risada da Plateia">Risada da Plateia</span>
+                      <div class="card-sound-meta">
+                        <span>0:04</span> • <span>Vol: 100%</span>
+                      </div>
+                    </div>
+                    <div class="card-hotkey-chip has-hotkey">
+                      <span>⌨</span> <strong>Ctrl + Alt + 1</strong>
+                    </div>
+                    <div class="card-play-row">
+                      <button class="btn-card-play" onclick="triggerPlaySound('Risada da Plateia')">▶ Tocar</button>
+                      <button class="btn-card-stop" title="Parar este som">■</button>
+                    </div>
+                  </article>
+
+                  <!-- CARD 2 -->
+                  <article class="sound-card-pro" data-sound="trompete triste">
+                    <div class="card-top-row">
+                      <div class="card-icon-badge" style="background: #ffb454;">🎺</div>
+                      <button class="card-menu-btn btn-edit-trigger" title="Editar áudio">✎</button>
+                    </div>
+                    <div class="card-body">
+                      <span class="card-sound-name" title="Trompete Triste (Wasted)">Trompete Triste</span>
+                      <div class="card-sound-meta">
+                        <span>0:06</span> • <span>Vol: 85%</span>
+                      </div>
+                    </div>
+                    <div class="card-hotkey-chip has-hotkey">
+                      <span>⌨</span> <strong>Ctrl + Alt + 2</strong>
+                    </div>
+                    <div class="card-play-row">
+                      <button class="btn-card-play" onclick="triggerPlaySound('Trompete Triste')">▶ Tocar</button>
+                      <button class="btn-card-stop" title="Parar este som">■</button>
+                    </div>
+                  </article>
+
+                  <!-- CARD 3 -->
+                  <article class="sound-card-pro" data-sound="aplausos">
+                    <div class="card-top-row">
+                      <div class="card-icon-badge" style="background: #3dd68c;">👏</div>
+                      <button class="card-menu-btn btn-edit-trigger" title="Editar áudio">✎</button>
+                    </div>
+                    <div class="card-body">
+                      <span class="card-sound-name" title="Aplausos da Multidão">Aplausos Multidão</span>
+                      <div class="card-sound-meta">
+                        <span>0:08</span> • <span>Vol: 90%</span>
+                      </div>
+                    </div>
+                    <div class="card-hotkey-chip has-hotkey">
+                      <span>⌨</span> <strong>Ctrl + Alt + 3</strong>
+                    </div>
+                    <div class="card-play-row">
+                      <button class="btn-card-play" onclick="triggerPlaySound('Aplausos Multidão')">▶ Tocar</button>
+                      <button class="btn-card-stop" title="Parar este som">■</button>
+                    </div>
+                  </article>
+                </div>
+              </div>
+
+              <!-- CATEGORIA 2: JOGOS & CLIPS -->
+              <div class="category-section" data-cat="jogos">
+                <div class="category-header">
+                  <div class="category-title-group">
+                    <h3>Jogos & Vítórias</h3>
+                    <span class="category-badge">2 sons</span>
+                  </div>
+                  <div class="category-actions">
+                    <button class="icon-tool-btn" title="Mover categoria para cima">▲</button>
+                    <button class="icon-tool-btn" title="Mover categoria para baixo">▼</button>
+                  </div>
+                </div>
+
+                <div class="sound-cards-grid">
+                  <!-- CARD 4 -->
+                  <article class="sound-card-pro" data-sound="level up">
+                    <div class="card-top-row">
+                      <div class="card-icon-badge" style="background: #7c5cff;">⭐</div>
+                      <button class="card-menu-btn btn-edit-trigger" title="Editar áudio">✎</button>
+                    </div>
+                    <div class="card-body">
+                      <span class="card-sound-name" title="Level Up FX">Level Up FX</span>
+                      <div class="card-sound-meta">
+                        <span>0:03</span> • <span>Vol: 100%</span>
+                      </div>
+                    </div>
+                    <div class="card-hotkey-chip has-hotkey">
+                      <span>⌨</span> <strong>Ctrl + Alt + 4</strong>
+                    </div>
+                    <div class="card-play-row">
+                      <button class="btn-card-play" onclick="triggerPlaySound('Level Up FX')">▶ Tocar</button>
+                      <button class="btn-card-stop" title="Parar este som">■</button>
+                    </div>
+                  </article>
+
+                  <!-- CARD 5 -->
+                  <article class="sound-card-pro" data-sound="headshot">
+                    <div class="card-top-row">
+                      <div class="card-icon-badge" style="background: #4dd8e6;">🎯</div>
+                      <button class="card-menu-btn btn-edit-trigger" title="Editar áudio">✎</button>
+                    </div>
+                    <div class="card-body">
+                      <span class="card-sound-name" title="Headshot Announcer">Headshot Announcer</span>
+                      <div class="card-sound-meta">
+                        <span>0:02</span> • <span>Vol: 100%</span>
+                      </div>
+                    </div>
+                    <div class="card-hotkey-chip">
+                      <span>⌨</span> <span>Sem atalho</span>
+                    </div>
+                    <div class="card-play-row">
+                      <button class="btn-card-play" onclick="triggerPlaySound('Headshot Announcer')">▶ Tocar</button>
+                      <button class="btn-card-stop" title="Parar este som">■</button>
+                    </div>
+                  </article>
+                </div>
+              </div>
+
+              <!-- CATEGORIA 3: SEM CATEGORIA -->
+              <div class="category-section" data-cat="sem-categoria">
+                <div class="category-header">
+                  <div class="category-title-group">
+                    <h3 style="color: var(--text-muted);">Sem Categoria</h3>
+                    <span class="category-badge">1 som</span>
+                  </div>
+                </div>
+
+                <div class="sound-cards-grid">
+                  <!-- CARD 6 -->
+                  <article class="sound-card-pro" data-sound="sino">
+                    <div class="card-top-row">
+                      <div class="card-icon-badge" style="background: #8892b0;">🔔</div>
+                      <button class="card-menu-btn btn-edit-trigger" title="Editar áudio">✎</button>
+                    </div>
+                    <div class="card-body">
+                      <span class="card-sound-name" title="Sino de Notificação">Sino Notificação</span>
+                      <div class="card-sound-meta">
+                        <span>0:01</span> • <span>Vol: 70%</span>
+                      </div>
+                    </div>
+                    <div class="card-hotkey-chip">
+                      <span>⌨</span> <span>Sem atalho</span>
+                    </div>
+                    <div class="card-play-row">
+                      <button class="btn-card-play" onclick="triggerPlaySound('Sino Notificação')">▶ Tocar</button>
+                      <button class="btn-card-stop" title="Parar este som">■</button>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </section>
+
+            <!-- ================================================================
+                 TELA 2: CONFIGURAÇÕES DO SOUNDBOARDMIC
+                 ================================================================ -->
+            <section class="view-section" id="view-settings">
+              <div class="settings-grid-layout">
+                
+                <!-- GRUPO: DISPOSITIVOS -->
+                <div class="settings-group-card">
+                  <div class="settings-group-title">
+                    <span class="grp-icon">🎙️</span>
+                    <span>Dispositivos de Áudio</span>
+                  </div>
+
+                  <!-- STATUS VB-CABLE -->
+                  <div style="background: var(--success-bg); border: 1px solid var(--success-border); padding: 12px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span style="color: var(--success); font-size: 16px;">✓</span>
+                      <div>
+                        <strong style="font-size: 12px; color: var(--text-primary); display: block;">VB-Audio Cable Detectado</strong>
+                        <span style="font-size: 11px; color: var(--text-muted);">Driver pronto para injeção no microfone</span>
+                      </div>
+                    </div>
+                    <button class="icon-tool-btn" title="Recarregar dispositivos">🔄</button>
+                  </div>
+
+                  <!-- TESTE DE MICROFONE (VU METER) -->
+                  <div class="vu-meter-container">
+                    <div class="vu-meter-labels">
+                      <span>Sinal do Microfone</span>
+                      <span id="vuValueText">Ativo (-18 dB)</span>
+                    </div>
+                    <div class="vu-meter-bar-track">
+                      <div class="vu-meter-bar-fill" id="vuMeterLive"></div>
+                    </div>
+                  </div>
+
+                  <div class="field-combo-block">
+                    <label>Microfone de Entrada (Seu microfone físico)</label>
+                    <select class="win-select">
+                      <option selected>Microfone (HyperX QuadCast USB)</option>
+                      <option>Microfone (Realtek High Definition Audio)</option>
+                    </select>
+                  </div>
+
+                  <div class="field-combo-block">
+                    <label>Saída Virtual (CABLE Input - Onde o app injeta)</label>
+                    <select class="win-select">
+                      <option selected>CABLE Input (VB-Audio Virtual Cable)</option>
+                    </select>
+                  </div>
+
+                  <div class="field-combo-block">
+                    <label>Monitoramento Local (Seus fones)</label>
+                    <select class="win-select">
+                      <option selected>Alto-falantes / Fones (HyperX QuadCast)</option>
+                      <option>Fones de Ouvido (Bluetooth)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- GRUPO: VOLUMES & PROCESSAMENTO -->
+                <div class="settings-group-card">
+                  <div class="settings-group-title">
+                    <span class="grp-icon">🎚️</span>
+                    <span>Volumes & Processamento de Voz</span>
+                  </div>
+
+                  <div class="slider-control-group">
+                    <div class="slider-label-row">
+                      <span>Volume do Microfone</span>
+                      <span class="slider-val" id="valMicVol">100%</span>
+                    </div>
+                    <input type="range" min="0" max="200" value="100" class="win-range-slider" oninput="document.getElementById('valMicVol').textContent = this.value + '%'" />
+                  </div>
+
+                  <div class="slider-control-group">
+                    <div class="slider-label-row">
+                      <span>Volume Master do Soundboard</span>
+                      <span class="slider-val" id="valSndVol">90%</span>
+                    </div>
+                    <input type="range" min="0" max="200" value="90" class="win-range-slider" oninput="document.getElementById('valSndVol').textContent = this.value + '%'" />
+                  </div>
+
+                  <div class="setting-item-row" style="margin-top: 10px;">
+                    <div class="setting-label-block">
+                      <strong>Supressão de Ruído (RNNoise)</strong>
+                      <span>Filtra ventiladores, teclados e chiados usando IA (só no mic).</span>
+                    </div>
+                    <div class="win-toggle checked" onclick="this.classList.toggle('checked')">
+                      <div class="win-toggle-thumb"></div>
+                    </div>
+                  </div>
+
+                  <div class="setting-item-row">
+                    <div class="setting-label-block">
+                      <strong>Noise Gate Inteligente</strong>
+                      <span>Muda para silêncio absoluto nas pausas da fala.</span>
+                    </div>
+                    <div class="win-toggle checked" onclick="this.classList.toggle('checked')">
+                      <div class="win-toggle-thumb"></div>
+                    </div>
+                  </div>
+
+                  <div class="setting-item-row">
+                    <div class="setting-label-block">
+                      <strong>Monitoramento Local nos Fones</strong>
+                      <span>Você também ouve os sons disparados nos seus fones.</span>
+                    </div>
+                    <div class="win-toggle checked" onclick="this.classList.toggle('checked')">
+                      <div class="win-toggle-thumb"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- GRUPO: TECLA DE PÂNICO -->
+                <div class="settings-group-card">
+                  <div class="settings-group-title">
+                    <span class="grp-icon" style="color: var(--danger);">■</span>
+                    <span>Tecla Global de Pânico</span>
+                  </div>
+
+                  <p style="font-size: 12px; color: var(--text-muted);">
+                    Corta imediatamente qualquer som em reprodução sem precisar focar na janela.
+                  </p>
+
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="hotkey-record-box" style="flex: 1;">
+                      <div class="hotkey-display">
+                        <span class="hotkey-tag">Ctrl</span> + <span class="hotkey-tag">Alt</span> + <span class="hotkey-tag">F12</span>
+                      </div>
+                    </div>
+                    <button class="btn-secondary-wpf">Gravar</button>
+                    <button class="icon-tool-btn" style="width: 38px; height: 38px;" title="Limpar tecla">🗑</button>
+                  </div>
+                </div>
+
+                <!-- GRUPO: SISTEMA WINDOWS -->
+                <div class="settings-group-card">
+                  <div class="settings-group-title">
+                    <span class="grp-icon">🪟</span>
+                    <span>Integração com Windows</span>
+                  </div>
+
+                  <div class="setting-item-row">
+                    <div class="setting-label-block">
+                      <strong>Iniciar com o Windows</strong>
+                      <span>Abre silenciosamente na inicialização do sistema.</span>
+                    </div>
+                    <div class="win-toggle checked" onclick="this.classList.toggle('checked')">
+                      <div class="win-toggle-thumb"></div>
+                    </div>
+                  </div>
+
+                  <div class="setting-item-row">
+                    <div class="setting-label-block">
+                      <strong>Minimizar para a Bandeja (Tray)</strong>
+                      <span>Fechar a janela não encerra os atalhos nem a injeção.</span>
+                    </div>
+                    <div class="win-toggle checked" onclick="this.classList.toggle('checked')">
+                      <div class="win-toggle-thumb"></div>
+                    </div>
+                  </div>
+
+                  <div class="setting-item-row">
+                    <div class="setting-label-block">
+                      <strong>Barra Rápida Flutuante Ativa</strong>
+                      <span>Mantém uma barra discreta sempre visível na tela.</span>
+                    </div>
+                    <div class="win-toggle checked" onclick="this.classList.toggle('checked')">
+                      <div class="win-toggle-thumb"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ================================================================
+                 TELA 3: BARRA RÁPIDA FLUTUANTE (QUICKBAR)
+                 ================================================================ -->
+            <section class="view-section" id="view-quickbar">
+              <div class="quickbar-preview-card">
+                <div>
+                  <h3 style="font-size: 16px; margin-bottom: 4px;">Barra Rápida Flutuante (QuickBar)</h3>
+                  <p style="font-size: 12px; color: var(--text-muted);">
+                    Uma janela compacta no modo <code>Topmost</code> que não rouba o foco do jogo ou transmissão. Permite disparar com 1 clique.
+                  </p>
+                </div>
+
+                <div style="background: #0d0f17; padding: 40px; border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; gap: 24px;">
+                  <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Prévia interativa da barra:</span>
+                  
+                  <!-- DEMO DA BARRA -->
+                  <div class="quickbar-floating-demo" role="toolbar" aria-label="Barra Rápida SoundboardMic">
+                    <div class="quickbar-drag" title="Arraste para posicionar">⠿</div>
+                    <button class="quickbar-btn-sound" style="background: #ff5c6c;" title="Risada da Plateia" onclick="triggerPlaySound('Risada da Plateia')">😂</button>
+                    <button class="quickbar-btn-sound" style="background: #ffb454;" title="Trompete Triste" onclick="triggerPlaySound('Trompete Triste')">🎺</button>
+                    <button class="quickbar-btn-sound" style="background: #3dd68c;" title="Aplausos" onclick="triggerPlaySound('Aplausos')">👏</button>
+                    <button class="quickbar-btn-sound" style="background: #7c5cff;" title="Level Up FX" onclick="triggerPlaySound('Level Up FX')">⭐</button>
+                    <button class="quickbar-btn-sound" style="background: #4dd8e6;" title="Headshot" onclick="triggerPlaySound('Headshot')">🎯</button>
+                    <button class="btn-card-stop" style="width: 32px; height: 32px; font-size: 10px;" title="Pânico">■</button>
+                  </div>
+                </div>
+
+                <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
+                  <strong>Diferenciais desta versão:</strong>
+                  <ul style="margin-left: 20px; margin-top: 6px;">
+                    <li>Configurável na horizontal ou vertical com clique com botão direito.</li>
+                    <li>Exibição configurável por áudio via toggle no Modal de Edição.</li>
+                    <li>Pânico integrado na ponta para corte imediato sem abrir o painel principal.</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <!-- ================================================================
+                 TELA 4: ACESSIBILIDADE & SNIPPETS WPF
+                 ================================================================ -->
+            <section class="view-section" id="view-a11y">
+              <div class="a11y-audit-card">
+                <div>
+                  <h3 style="font-size: 17px; margin-bottom: 4px;">Auditoria de Acessibilidade & Melhorias WPF</h3>
+                  <p style="font-size: 12px; color: var(--text-muted);">
+                    Recomendações técnicas diretas para o código XAML do repositório para atingir nota máxima em a11y e usabilidade.
+                  </p>
+                </div>
+
+                <table class="audit-table">
+                  <thead>
+                    <tr>
+                      <th>Componente</th>
+                      <th>Situação Atual (WPF)</th>
+                      <th>Melhoria Recomendada</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Botões de Ação de Ícone</strong></td>
+                      <td>Apenas glifos (Segoe Fluent) sem texto acessível.</td>
+                      <td>Adicionar <code>AutomationProperties.Name</code> em todos os <code>IconButton</code> para leitores de tela.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Navegação por Teclado</strong></td>
+                      <td>Foco padrão fino ou oculto em botões customizados.</td>
+                      <td>Criar um <code>FocusVisualStyle</code> com anel ciano (<code>#4DD8E6</code>) de 2px de espessura.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Banner de Erros</strong></td>
+                      <td>Fundo estático sem live region.</td>
+                      <td>Definir <code>AutomationProperties.LiveSetting="Assertive"</code> para anúncio imediato.</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Chips de Atalho</strong></td>
+                      <td>Sem indicador semântico para quem não vê cores.</td>
+                      <td>Texto explícito "Sem atalho" e leitor anunciando a combinação completa.</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div>
+                  <h4 style="font-size: 13px; margin-bottom: 8px;">Snippet XAML: FocusVisualStyle & AutomationProperties</h4>
+                  <pre class="code-snippet-box"><code>&lt;!-- Estilo de Foco Visível para todos os botões no Controls.xaml --&gt;
+&lt;Style x:Key="AppFocusVisual"&gt;
+    &lt;Setter Property="Control.Template"&gt;
+        &lt;Setter.Value&gt;
+            &lt;ControlTemplate&gt;
+                &lt;Rectangle Stroke="#4DD8E6" StrokeThickness="2" RadiusX="8" RadiusY="8" Margin="-3"/&gt;
+            &lt;/ControlTemplate&gt;
+        &lt;/Setter.Value&gt;
+    &lt;/Setter&gt;
+&lt;/Style&gt;
+
+&lt;!-- Exemplo no PlayButton --&gt;
+&lt;Button Style="{StaticResource PlayButton}"
+        AutomationProperties.Name="Tocar som Risada da Plateia"
+        FocusVisualStyle="{StaticResource AppFocusVisual}" /&gt;</code></pre>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==========================================================================
+         MODAL DE EDIÇÃO DE ÁUDIO (AUDIO EDIT DIALOG PROPOSTA)
+         ========================================================================== -->
+    <div class="modal-backdrop" id="modalAudioEdit" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+      <div class="audio-edit-dialog-pro">
+        
+        <!-- CABEÇALHO DO MODAL COM PREVIEW AO VIVO -->
+        <div class="dialog-header">
+          <div class="dialog-title-group">
+            <div class="dialog-preview-badge" id="modalBadgePreview">😂</div>
+            <div>
+              <h3 id="modalHeading">Editar áudio</h3>
+              <span>Personalize nome, arquivo, atalho e organização</span>
+            </div>
+          </div>
+          <button class="win-btn close" id="btnCloseModal" title="Fechar">✕</button>
+        </div>
+
+        <!-- CORPO DO MODAL -->
+        <div class="dialog-body">
+          
+          <!-- LINHA 1: NOME & ARQUIVO -->
+          <div class="dialog-2col">
+            <div class="form-group">
+              <label for="editSoundName">Nome do Áudio</label>
+              <input type="text" id="editSoundName" class="win-input-text" value="Risada da Plateia" />
+            </div>
+
+            <div class="form-group">
+              <label>Arquivo de Áudio</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" class="win-input-text" style="flex: 1;" value="c:\audios\risada.mp3" readonly />
+                <button class="btn-secondary-wpf" style="height: 38px;">Procurar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LINHA 2: CATEGORIA & VOLUME COM PREVIEW -->
+          <div class="dialog-2col">
+            <div class="form-group">
+              <label for="editSoundCategory">Categoria</label>
+              <input type="text" id="editSoundCategory" class="win-input-text" value="Memes & Reações" list="categoryOptions" />
+              <datalist id="categoryOptions">
+                <option value="Memes & Reações"></option>
+                <option value="Jogos & Vítórias"></option>
+              </datalist>
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between;">
+                <label>Volume Individual</label>
+                <span style="font-size: 11px; font-weight: 700; color: var(--accent);" id="editVolVal">100%</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="range" min="0" max="200" value="100" class="win-range-slider" oninput="document.getElementById('editVolVal').textContent = this.value + '%'" />
+                <button class="btn-secondary-wpf" style="height: 34px; padding: 0 10px;" title="Ouvir prévia nos fones">🔊 Prévia</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LINHA 3: ATALHO GLOBAL -->
+          <div class="form-group">
+            <label>Atalho Global de Disparo</label>
+            <div style="display: flex; gap: 10px;">
+              <div class="hotkey-record-box" id="modalHotkeyBox" style="flex: 1;">
+                <div class="hotkey-display" id="modalHotkeyValue">
+                  <span class="hotkey-tag">Ctrl</span> + <span class="hotkey-tag">Alt</span> + <span class="hotkey-tag">1</span>
+                </div>
+              </div>
+              <button class="btn-secondary-wpf" id="btnRecordModalHotkey">Gravar</button>
+              <button class="icon-tool-btn" style="width: 44px; height: 44px;" title="Remover atalho" id="btnClearHotkey">🗑</button>
+            </div>
+          </div>
+
+          <!-- LINHA 4: ÍCONE & COR (BARRA RÁPIDA E CARD) -->
+          <div class="form-group">
+            <label>Ícone Visual (Segoe Fluent / Emojis)</label>
+            <div class="icon-picker-grid">
+              <button class="icon-choice-btn selected" onclick="selectIcon('😂', this)">😂</button>
+              <button class="icon-choice-btn" onclick="selectIcon('🎺', this)">🎺</button>
+              <button class="icon-choice-btn" onclick="selectIcon('👏', this)">👏</button>
+              <button class="icon-choice-btn" onclick="selectIcon('⭐', this)">⭐</button>
+              <button class="icon-choice-btn" onclick="selectIcon('🎯', this)">🎯</button>
+              <button class="icon-choice-btn" onclick="selectIcon('🔔', this)">🔔</button>
+              <button class="icon-choice-btn" onclick="selectIcon('💥', this)">💥</button>
+              <button class="icon-choice-btn" onclick="selectIcon('🔥', this)">🔥</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Cor do Card e da Barra Rápida</label>
+            <div class="color-palette-row">
+              <button class="color-dot-btn selected" style="background: #ff5c6c;" onclick="selectColor('#ff5c6c', this)"></button>
+              <button class="color-dot-btn" style="background: #ffb454;" onclick="selectColor('#ffb454', this)"></button>
+              <button class="color-dot-btn" style="background: #3dd68c;" onclick="selectColor('#3dd68c', this)"></button>
+              <button class="color-dot-btn" style="background: #4dd8e6;" onclick="selectColor('#4dd8e6', this)"></button>
+              <button class="color-dot-btn" style="background: #7c5cff;" onclick="selectColor('#7c5cff', this)"></button>
+              <button class="color-dot-btn" style="background: #e8395c;" onclick="selectColor('#e8395c', this)"></button>
+              <button class="color-dot-btn" style="background: #8892b0;" onclick="selectColor('#8892b0', this)"></button>
+            </div>
+          </div>
+
+          <!-- TOGGLE: EXIBIR NA BARRA RÁPIDA -->
+          <div class="setting-item-row" style="margin-top: 4px; padding-bottom: 0;">
+            <div class="setting-label-block">
+              <strong>Exibir na Barra Rápida Flutuante</strong>
+              <span>Gera um botão de acesso imediato na barra suspensa.</span>
+            </div>
+            <div class="win-toggle checked" onclick="this.classList.toggle('checked')">
+              <div class="win-toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RODAPÉ DO MODAL -->
+        <div class="dialog-footer">
+          <button class="btn-secondary-wpf" id="btnCancelModal">Cancelar</button>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-panic-wpf" style="height: 38px;">Excluir</button>
+            <button class="btn-primary-wpf" id="btnSaveModal">Salvar alterações</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION DE FEEDBACK -->
+    <div class="toast-simulated" id="toastFeedback">
+      <div class="toast-icon-wrapper" id="toastIcon">🎵</div>
+      <div>
+        <strong id="toastTitle" style="font-size: 13px; display: block;">Áudio Disparado</strong>
+        <span id="toastMessage" style="font-size: 11px; color: var(--text-muted);">Mixando com o microfone para CABLE Input</span>
+      </div>
+    </div>
+
+    <!-- JAVASCRIPT DE INTERATIVIDADE -->
+    <script>
+      // 1. Navegação de Telas
+      const viewPills = document.querySelectorAll('.view-pill');
+      const sidebarItems = document.querySelectorAll('.sidebar-item');
+      const viewSections = document.querySelectorAll('.view-section');
+      const pageTitle = document.getElementById('pageTitle');
+      const pageSubtitle = document.getElementById('pageSubtitle');
+      const globalSearch = document.getElementById('globalSearchContainer');
+
+      function switchView(targetId) {
+        viewPills.forEach(p => p.classList.toggle('active', p.dataset.target === targetId));
+        sidebarItems.forEach(s => s.classList.toggle('active', s.dataset.nav === targetId));
+        viewSections.forEach(sec => sec.classList.toggle('active', sec.id === targetId));
+
+        if (targetId === 'view-sounds') {
+          pageTitle.textContent = 'Meus sons';
+          pageSubtitle.textContent = 'Organize e dispare seus áudios por categorias e atalhos globais';
+          globalSearch.style.display = 'block';
+        } else if (targetId === 'view-settings') {
+          pageTitle.textContent = 'Configurações';
+          pageSubtitle.textContent = 'Dispositivos de áudio, processamento de voz e sistema';
+          globalSearch.style.display = 'none';
+        } else if (targetId === 'view-quickbar') {
+          pageTitle.textContent = 'Barra Rápida Flutuante';
+          pageSubtitle.textContent = 'Janela sempre no topo para disparo rápido sem sair da chamada ou jogo';
+          globalSearch.style.display = 'none';
+        } else if (targetId === 'view-a11y') {
+          pageTitle.textContent = 'Auditoria & Acessibilidade';
+          pageSubtitle.textContent = 'Requisitos e padrões Fluent para implementar no código XAML';
+          globalSearch.style.display = 'none';
+        }
+      }
+
+      viewPills.forEach(p => p.addEventListener('click', () => switchView(p.dataset.target)));
+      sidebarItems.forEach(s => s.addEventListener('click', () => {
+        if (s.dataset.nav) switchView(s.dataset.nav);
+      }));
+
+      // 2. Busca e Filtro de Sons
+      const searchInput = document.getElementById('soundFilterInput');
+      const soundCards = document.querySelectorAll('.sound-card-pro');
+      const categories = document.querySelectorAll('.category-section');
+
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        soundCards.forEach(card => {
+          const soundName = card.dataset.sound.toLowerCase();
+          const matches = soundName.includes(query);
+          card.style.display = matches ? 'flex' : 'none';
+        });
+
+        // Ocultar categorias sem cards visíveis
+        categories.forEach(cat => {
+          const visibleCards = cat.querySelectorAll('.sound-card-pro[style*="display: flex"], .sound-card-pro:not([style*="display: none"])');
+          cat.style.display = visibleCards.length > 0 ? 'block' : 'none';
+        });
+      });
+
+      // 3. Simulação de Reprodução & Pânico
+      function showToast(title, msg, icon = '🎵') {
+        const toast = document.getElementById('toastFeedback');
+        document.getElementById('toastTitle').textContent = title;
+        document.getElementById('toastMessage').textContent = msg;
+        document.getElementById('toastIcon').textContent = icon;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      }
+
+      function triggerPlaySound(name) {
+        showToast('Tocando: ' + name, 'Áudio mixado ao vivo no microfone (CABLE Input)', '▶');
+      }
+
+      document.getElementById('btnPanicAction').addEventListener('click', () => {
+        showToast('Pânico Acionado!', 'Todos os sons foram interrompidos imediatamente.', '■');
+      });
+
+      // 4. Toggle do Motor de Áudio
+      let engineRunning = true;
+      const btnToggle = document.getElementById('btnToggleEngine');
+      const engineDot = document.getElementById('engineDot');
+      const engineStatusText = document.getElementById('engineStatusText');
+      const engineToggleText = document.getElementById('engineToggleText');
+      const engineToggleIcon = document.getElementById('engineToggleIcon');
+
+      btnToggle.addEventListener('click', () => {
+        engineRunning = !engineRunning;
+        if (engineRunning) {
+          engineDot.classList.remove('stopped');
+          engineStatusText.textContent = 'Injetando áudio';
+          engineToggleText.textContent = 'Parar injeção';
+          engineToggleIcon.textContent = '⏹';
+          showToast('Injeção Iniciada', 'Microfone conectado ao CABLE Input', '✓');
+        } else {
+          engineDot.classList.add('stopped');
+          engineStatusText.textContent = 'Injeção parada';
+          engineToggleText.textContent = 'Iniciar injeção';
+          engineToggleIcon.textContent = '▶';
+          showToast('Injeção Parada', 'O microfone não está mais enviando som ao cabo virtual', '⏸');
+        }
+      });
+
+      // 5. Modal de Edição de Áudio
+      const modal = document.getElementById('modalAudioEdit');
+      const btnOpenDirect = document.getElementById('btnOpenModalDirect');
+      const btnAddNew = document.getElementById('btnAddNewSound');
+      const btnCloseModal = document.getElementById('btnCloseModal');
+      const btnCancelModal = document.getElementById('btnCancelModal');
+      const btnSaveModal = document.getElementById('btnSaveModal');
+      const editTriggers = document.querySelectorAll('.btn-edit-trigger');
+
+      function openModal(title = 'Editar áudio') {
+        document.getElementById('modalHeading').textContent = title;
+        modal.classList.add('open');
+      }
+      function closeModal() {
+        modal.classList.remove('open');
+      }
+
+      btnOpenDirect.addEventListener('click', () => openModal('Editar áudio'));
+      btnAddNew.addEventListener('click', () => openModal('Novo áudio'));
+      editTriggers.forEach(b => b.addEventListener('click', () => openModal('Editar áudio')));
+      btnCloseModal.addEventListener('click', closeModal);
+      btnCancelModal.addEventListener('click', closeModal);
+      btnSaveModal.addEventListener('click', () => {
+        closeModal();
+        showToast('Áudio Salvo', 'As alterações foram sincronizadas com o soundboard.', '✓');
+      });
+
+      // 6. Seletores do Modal
+      function selectIcon(icon, btn) {
+        document.querySelectorAll('.icon-choice-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('modalBadgePreview').textContent = icon;
+      }
+
+      function selectColor(hex, btn) {
+        document.querySelectorAll('.color-dot-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('modalBadgePreview').style.background = hex;
+        document.getElementById('modalBadgePreview').style.boxShadow = `0 4px 14px ${hex}66`;
+      }
+
+      // 7. Gravação de Atalho Simulada
+      const btnRecord = document.getElementById('btnRecordModalHotkey');
+      const hotkeyBox = document.getElementById('modalHotkeyBox');
+      const hotkeyVal = document.getElementById('modalHotkeyValue');
+      let isRecording = false;
+
+      btnRecord.addEventListener('click', () => {
+        isRecording = !isRecording;
+        if (isRecording) {
+          hotkeyBox.classList.add('recording');
+          hotkeyVal.innerHTML = '<span style="color: var(--accent); font-weight: bold;">Pressione as teclas desejadas…</span>';
+          btnRecord.textContent = 'Cancelar';
+          
+          // Simula captura após 1.5s
+          setTimeout(() => {
+            if (isRecording) {
+              hotkeyBox.classList.remove('recording');
+              hotkeyVal.innerHTML = '<span class="hotkey-tag">Ctrl</span> + <span class="hotkey-tag">Shift</span> + <span class="hotkey-tag">A</span>';
+              btnRecord.textContent = 'Gravar';
+              isRecording = false;
+            }
+          }, 1500);
+        } else {
+          hotkeyBox.classList.remove('recording');
+          hotkeyVal.innerHTML = '<span class="hotkey-tag">Ctrl</span> + <span class="hotkey-tag">Alt</span> + <span class="hotkey-tag">1</span>';
+          btnRecord.textContent = 'Gravar';
+        }
+      });
+
+      document.getElementById('btnClearHotkey').addEventListener('click', () => {
+        hotkeyVal.innerHTML = '<span style="color: var(--text-muted); font-size: 11px;">Nenhum atalho definido</span>';
+      });
+
+      // 8. Animação do VU Meter
+      setInterval(() => {
+        const meter = document.getElementById('vuMeterLive');
+        if (meter && engineRunning) {
+          const rand = ((Math.random() * 0.45) + 0.3).toFixed(2);
+          meter.style.transform = `scaleX(${rand})`;
+        }
+      }, 300);
+    </script>
+  </body>
+</html>

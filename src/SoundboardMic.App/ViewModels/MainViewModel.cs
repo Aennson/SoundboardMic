@@ -36,7 +36,8 @@ public partial class MainViewModel : ObservableObject
         QuickBarService quickBar,
         AudioFileCache fileCache,
         SettingsViewModel settingsViewModel,
-        MyInstantsViewModel myInstantsViewModel)
+        MyInstantsViewModel myInstantsViewModel,
+        EditorDeSonsViewModel editorDeSonsViewModel)
     {
         _services = services;
         _audioRepo = audioRepo;
@@ -50,6 +51,10 @@ public partial class MainViewModel : ObservableObject
         Settings = settingsViewModel;
         MyInstants = myInstantsViewModel;
         MyInstants.SomAdicionado += (_, _) => _dispatcher.InvokeAsync(async () => await RecarregarTudoAsync());
+        EditorDeSons = editorDeSonsViewModel;
+        EditorDeSons.Vincular(Audios);
+        EditorDeSons.ReportarErro = MostrarErro;
+        EditorDeSons.AposAlteracao = AposCorteAsync;
 
         _controller.StatusChanged += (_, _) => _dispatcher.Invoke(UpdateStatus);
         _controller.ErrorRaised += (_, msg) => _dispatcher.Invoke(() => MostrarErro(msg));
@@ -57,24 +62,29 @@ public partial class MainViewModel : ObservableObject
 
     public SettingsViewModel Settings { get; }
     public MyInstantsViewModel MyInstants { get; }
+    public EditorDeSonsViewModel EditorDeSons { get; }
 
     public ObservableCollection<AudioItemViewModel> Audios { get; } = new();
 
     /// <summary>Seções por categoria já filtradas/ordenadas, prontas para exibição em "Meus sons".</summary>
     public ObservableCollection<CategoriaGroupViewModel> Grupos { get; } = new();
 
-    /// <summary>Aba principal exibida: "sons" (acervo), "web" (myinstants) ou "config".</summary>
+    /// <summary>Aba principal exibida: "sons" (acervo), "web" (myinstants), "editor" (corte) ou "config".</summary>
     [ObservableProperty] private string _aba = "sons";
 
     public bool MostrandoSons => Aba == "sons";
     public bool MostrandoMyInstants => Aba == "web";
+    public bool MostrandoEditor => Aba == "editor";
     public bool MostrandoConfiguracoes => Aba == "config";
 
     partial void OnAbaChanged(string value)
     {
         OnPropertyChanged(nameof(MostrandoSons));
         OnPropertyChanged(nameof(MostrandoMyInstants));
+        OnPropertyChanged(nameof(MostrandoEditor));
         OnPropertyChanged(nameof(MostrandoConfiguracoes));
+        if (value != "editor")
+            EditorDeSons.PararPreview();
         if (value == "web")
             _ = MyInstants.CarregarInicialAsync();
         else
@@ -137,12 +147,25 @@ public partial class MainViewModel : ObservableObject
                 await _audioRepo.UpdateAsync(audio);
         }
 
-        Audios.Clear();
+        // Reaproveita os cards já exibidos: trocar o modelo em vez de recriar o view model
+        // mantém os containers da grade vivos, evitando reanimar a lista inteira.
+        var anteriores = Audios.ToDictionary(a => a.Id);
+        var nomesCategoria = _categorias.ToDictionary(c => c.Id, c => c.Nome);
+        var atualizados = new List<AudioItemViewModel>(audios.Count);
         foreach (var audio in audios)
         {
             mapeamentos.TryGetValue(audio.Id, out var map);
-            Audios.Add(new AudioItemViewModel(audio, map));
+            if (anteriores.TryGetValue(audio.Id, out var existente))
+                existente.Atualizar(audio, map);
+            else
+                existente = new AudioItemViewModel(audio, map);
+            existente.CategoriaNome = audio.CategoriaId is long cid && nomesCategoria.TryGetValue(cid, out var nomeCat)
+                ? nomeCat
+                : "Sem categoria";
+            atualizados.Add(existente);
         }
+
+        GradeSync.Sincronizar(Audios, atualizados);
         ReconstruirGrupos();
     }
 
@@ -159,7 +182,7 @@ public partial class MainViewModel : ObservableObject
         // simplifica agrupar categorizados e "sem categoria" (chave null) de uma vez.
         var porCategoria = Audios.Where(Corresponde).ToLookup(a => a.Audio.CategoriaId);
 
-        Grupos.Clear();
+        var desejados = new List<GradeSync.GrupoDesejado>();
 
         foreach (var categoria in _categorias.OrderBy(c => c.Ordem))
         {
@@ -167,20 +190,14 @@ public partial class MainViewModel : ObservableObject
             if (itens.Count == 0)
                 continue;
 
-            var grupo = new CategoriaGroupViewModel(categoria.Id, categoria.Nome, categoria.Ordem);
-            foreach (var item in itens)
-                grupo.Itens.Add(item);
-            Grupos.Add(grupo);
+            desejados.Add(new GradeSync.GrupoDesejado(categoria.Id, categoria.Nome, categoria.Ordem, itens));
         }
 
         var semCategoria = porCategoria[null].OrderBy(a => a.Audio.Ordem).ThenBy(a => a.Audio.CriadoEm).ToList();
         if (semCategoria.Count > 0)
-        {
-            var grupo = new CategoriaGroupViewModel(null, "Sem categoria", int.MaxValue);
-            foreach (var item in semCategoria)
-                grupo.Itens.Add(item);
-            Grupos.Add(grupo);
-        }
+            desejados.Add(new GradeSync.GrupoDesejado(null, "Sem categoria", int.MaxValue, semCategoria));
+
+        GradeSync.SincronizarGrupos(Grupos, desejados);
 
         ListaVazia = Audios.Count == 0;
     }
@@ -195,8 +212,12 @@ public partial class MainViewModel : ObservableObject
         MicDeviceName = status.MicDeviceName ?? "—";
 
         var tocando = new HashSet<string>(status.ActiveSoundPaths, StringComparer.OrdinalIgnoreCase);
+        var loops = new HashSet<string>(status.LoopingSoundPaths, StringComparer.OrdinalIgnoreCase);
         foreach (var item in Audios)
+        {
             item.Tocando = tocando.Contains(item.CaminhoArquivo);
+            item.EmLoop = loops.Contains(item.CaminhoArquivo);
+        }
     }
 
     private void MostrarErro(string mensagem)
@@ -211,6 +232,7 @@ public partial class MainViewModel : ObservableObject
     // ---- Navegação ----
     [RelayCommand] private void MostrarSons() => Aba = "sons";
     [RelayCommand] private void MostrarMyInstants() => Aba = "web";
+    [RelayCommand] private void MostrarEditor() => Aba = "editor";
     [RelayCommand] private void MostrarConfig() => Aba = "config";
 
     [RelayCommand] private void FecharErro() => ErroBanner = null;
@@ -245,9 +267,75 @@ public partial class MainViewModel : ObservableObject
     private async Task EditarAudio(AudioItemViewModel? item)
     {
         if (item is null) return;
+        var id = item.Id;
         var vm = CriarEditor(item);
-        if (_dialogs.ShowAudioEditor(vm) && (vm.Salvou || vm.Excluiu))
-            await RecarregarTudoAsync();
+        if (!_dialogs.ShowAudioEditor(vm) || (!vm.Salvou && !vm.Excluiu))
+            return;
+
+        await RecarregarTudoAsync();
+
+        // Só o card editado reanima a entrada; os demais containers foram reaproveitados.
+        if (vm.Salvou && Audios.FirstOrDefault(a => a.Id == id) is { } editado)
+            await ReanimarEntradaAsync(editado);
+    }
+
+    /// <summary>Duração da reanimação de entrada do card editado (ver ItemContainerStyle em SoundboardView).</summary>
+    private static readonly TimeSpan DuracaoEntrada = TimeSpan.FromMilliseconds(260);
+
+    private async Task ReanimarEntradaAsync(AudioItemViewModel item)
+    {
+        item.Entrando = true;
+        await Task.Delay(DuracaoEntrada);
+        item.Entrando = false;
+    }
+
+    /// <summary>Abre o Editor de sons já com este áudio selecionado.</summary>
+    [RelayCommand]
+    private void CortarAudio(AudioItemViewModel? item)
+    {
+        if (item is null) return;
+        Aba = "editor";
+        EditorDeSons.Abrir(item);
+    }
+
+    /// <summary>Depois de um corte salvo: recarrega e anima só o card criado/substituído.</summary>
+    private async Task AposCorteAsync(long audioId)
+    {
+        await RecarregarTudoAsync();
+        if (Audios.FirstOrDefault(a => a.Id == audioId) is { } afetado)
+            _ = ReanimarEntradaAsync(afetado);
+    }
+
+    [RelayCommand]
+    private async Task ExcluirAudio(AudioItemViewModel? item)
+    {
+        if (item is null) return;
+        if (!_dialogs.Confirm("Excluir áudio",
+                $"Remover \"{item.Nome}\"? O atalho associado também será removido."))
+            return;
+
+        try
+        {
+            _controller.StopSound(item.CaminhoArquivo);
+            await _audioRepo.DeleteAsync(item.Id); // cascade remove o mapeamento
+            _fileCache.RemoverCache(item.CaminhoArquivo);
+            await RemoverComAnimacaoAsync(item);
+            await _controller.ReloadBindingsAsync();
+            UpdateStatus();
+        }
+        catch (Exception ex)
+        {
+            MostrarErro($"Não foi possível excluir o áudio: {ex.Message}");
+        }
+    }
+
+    /// <summary>Duração da animação de saída do card (ver ItemContainerStyle em SoundboardView).</summary>
+    private static readonly TimeSpan DuracaoRemocao = TimeSpan.FromMilliseconds(300);
+
+    private async Task RemoverComAnimacaoAsync(AudioItemViewModel item)
+    {
+        await CardRemoval.RemoverAsync(Grupos, Audios, item, DuracaoRemocao);
+        ListaVazia = Audios.Count == 0;
     }
 
     [RelayCommand]
@@ -263,6 +351,14 @@ public partial class MainViewModel : ObservableObject
     {
         if (item is null) return;
         _controller.StopSound(item.CaminhoArquivo);
+    }
+
+    [RelayCommand]
+    private void AlternarLoopAudio(AudioItemViewModel? item)
+    {
+        if (item is null) return;
+        _controller.ToggleLoopSound(item.CaminhoArquivo, (float)item.Audio.VolumePadrao);
+        UpdateStatus();
     }
 
     // ---- Organização por categoria ----
@@ -303,42 +399,26 @@ public partial class MainViewModel : ObservableObject
         ReconstruirGrupos();
     }
 
-    [RelayCommand]
-    private async Task MoverAudioAcima(AudioItemViewModel? item)
+    /// <summary>Indica se o card pode ser solto sobre outro: só dentro da mesma categoria.</summary>
+    public bool PodeMoverAudio(AudioItemViewModel origem, AudioItemViewModel destino) =>
+        !ReferenceEquals(origem, destino) && Grupos.Any(g => g.Itens.Contains(origem) && g.Itens.Contains(destino));
+
+    /// <summary>Arrastar e soltar: move o card para a posição do destino e persiste a nova ordem.</summary>
+    public async Task MoverAudioParaAsync(AudioItemViewModel origem, AudioItemViewModel destino)
     {
-        if (item is null) return;
-        var grupo = Grupos.FirstOrDefault(g => g.Itens.Contains(item));
+        var grupo = Grupos.FirstOrDefault(g => g.Itens.Contains(origem) && g.Itens.Contains(destino));
         if (grupo is null) return;
-        var idx = grupo.Itens.IndexOf(item);
-        if (idx <= 0) return;
-        await TrocarOrdemAudiosAsync(grupo.Itens, idx, idx - 1);
-    }
 
-    [RelayCommand]
-    private async Task MoverAudioAbaixo(AudioItemViewModel? item)
-    {
-        if (item is null) return;
-        var grupo = Grupos.FirstOrDefault(g => g.Itens.Contains(item));
-        if (grupo is null) return;
-        var idx = grupo.Itens.IndexOf(item);
-        if (idx < 0 || idx >= grupo.Itens.Count - 1) return;
-        await TrocarOrdemAudiosAsync(grupo.Itens, idx, idx + 1);
-    }
-
-    /// <summary>Renumera os áudios da categoria sequencialmente (0..n-1) na ordem atual
-    /// e então troca as duas posições alvo, persistindo tudo. Evita que áudios com
-    /// <see cref="Audio.Ordem"/> empatado (ex.: adicionados na mesma sessão) deixem a
-    /// troca sem efeito visual.</summary>
-    private async Task TrocarOrdemAudiosAsync(ObservableCollection<AudioItemViewModel> itens, int idxA, int idxB)
-    {
-        for (var i = 0; i < itens.Count; i++)
-            itens[i].Audio.Ordem = i;
-        (itens[idxA].Audio.Ordem, itens[idxB].Audio.Ordem) = (itens[idxB].Audio.Ordem, itens[idxA].Audio.Ordem);
-
-        foreach (var item in itens)
-            await _audioRepo.UpdateAsync(item.Audio);
-
-        ReconstruirGrupos();
+        try
+        {
+            foreach (var item in AudioOrdering.Mover(grupo.Itens, origem, destino))
+                await _audioRepo.UpdateAsync(item.Audio);
+        }
+        catch (Exception ex)
+        {
+            MostrarErro($"Não foi possível salvar a nova ordem: {ex.Message}");
+            ReconstruirGrupos();
+        }
     }
 
     private AudioEditViewModel CriarEditor(AudioItemViewModel? editing) => new(

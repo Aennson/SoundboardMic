@@ -9,8 +9,8 @@ namespace SoundboardMic.App;
 
 /// <summary>
 /// Gera o ícone do app em runtime (quadrado arredondado com gradiente violeta e um
-/// microfone branco), evitando depender de um arquivo .ico externo. Serve tanto para
-/// a bandeja (System.Drawing.Icon) quanto para a janela (ImageSource).
+/// microfone branco). Serve tanto para a bandeja (System.Drawing.Icon) quanto para a
+/// janela (ImageSource). Assets/SoundboardMic.ico contém a mesma arte para o executável.
 /// </summary>
 public static class AppIcon
 {

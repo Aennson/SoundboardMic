@@ -128,6 +128,20 @@
                     <ComboBox Style="{StaticResource AppComboBox}" ItemContainerStyle="{StaticResource AppComboItem}"
                               ItemsSource="{Binding OutputDevices}" SelectedItem="{Binding SelectedOutput}" />
 
+                    <TextBlock Text="SEGUNDA SAÍDA VIRTUAL (OPCIONAL)" Style="{StaticResource FieldLabel}" Margin="2,16,0,7" />
+                    <ComboBox Style="{StaticResource AppComboBox}" ItemContainerStyle="{StaticResource AppComboItem}"
+                              ItemsSource="{Binding SecondaryOutputDevices}" SelectedItem="{Binding SelectedSecondaryOutput}"
+                              IsEnabled="{Binding SecondaryOutputEnabled}" />
+
+                    <Grid Margin="0,12,0,0">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Transmitir em dois dispositivos" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Medium" />
+                            <TextBlock Text="Envia o mesmo mix para a segunda saída ao mesmo tempo." Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource ToggleSwitch}" HorizontalAlignment="Right"
+                                      IsChecked="{Binding SecondaryOutputEnabled, Mode=TwoWay}" />
+                    </Grid>
+
                     <TextBlock Text="MONITORAMENTO LOCAL — FONES" Style="{StaticResource FieldLabel}" Margin="2,16,0,7" />
                     <ComboBox Style="{StaticResource AppComboBox}" ItemContainerStyle="{StaticResource AppComboItem}"
                               ItemsSource="{Binding MonitorDevices}" SelectedItem="{Binding SelectedMonitor}" />

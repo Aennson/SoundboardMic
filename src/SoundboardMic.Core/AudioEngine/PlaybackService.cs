@@ -25,10 +25,44 @@ public class PlaybackService : IPlaybackService
 
     public event EventHandler? PlaybackStopped;
 
-    public void Play(string filePath, string? deviceId = null, float volume = 1.0f)
+    public TimeSpan Position
+    {
+        get
+        {
+            lock (_lock)
+                return _reader?.CurrentTime ?? TimeSpan.Zero;
+        }
+    }
+
+    public void Play(string filePath, string? deviceId = null, float volume = 1.0f) =>
+        Start(filePath, null, null, deviceId, volume);
+
+    public void PlayRange(string filePath, TimeSpan start, TimeSpan end, string? deviceId = null, float volume = 1.0f)
+    {
+        if (end <= start)
+            throw new ArgumentOutOfRangeException(nameof(end), "O fim do trecho precisa ser posterior ao início.");
+        Start(filePath, start, end - start, deviceId, volume);
+    }
+
+    private void Start(string filePath, TimeSpan? inicio, TimeSpan? duracao, string? deviceId, float volume)
     {
         var reader = AudioFileDecoder.OpenRead(filePath);
-        var sampleProvider = new VolumeSampleProvider(AudioFileDecoder.ToSampleProvider(reader))
+        ISampleProvider fonte;
+        try
+        {
+            if (inicio is { } i && i > TimeSpan.Zero)
+                reader.CurrentTime = i < reader.TotalTime ? i : reader.TotalTime;
+            fonte = AudioFileDecoder.ToSampleProvider(reader);
+            if (duracao is { } d)
+                fonte = new OffsetSampleProvider(fonte) { Take = d };
+        }
+        catch
+        {
+            reader.Dispose();
+            throw;
+        }
+
+        var sampleProvider = new VolumeSampleProvider(fonte)
         {
             Volume = Math.Clamp(volume, 0f, 2f),
         };

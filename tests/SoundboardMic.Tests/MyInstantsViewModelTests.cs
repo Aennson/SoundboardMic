@@ -174,7 +174,7 @@ public class MyInstantsViewModelTests : IDisposable
         }
     }
 
-    private sealed class FakePlaybackService : IPlaybackService
+    internal sealed class FakePlaybackService : IPlaybackService
     {
         public bool IsPlaying { get; private set; }
         public string? UltimoCaminho { get; private set; }
@@ -188,6 +188,11 @@ public class MyInstantsViewModelTests : IDisposable
             IsPlaying = true;
             Parado = false;
         }
+
+        public void PlayRange(string filePath, TimeSpan start, TimeSpan end, string? deviceId = null, float volume = 1.0f)
+            => Play(filePath, deviceId, volume);
+
+        public TimeSpan Position => TimeSpan.Zero;
 
         public void Stop()
         {

@@ -17,6 +17,15 @@ public class MicInjectionOptions
     /// <summary>Dispositivo para monitoramento local (fones). Null = padrão.</summary>
     public string? MonitorDeviceId { get; set; }
 
+    /// <summary>
+    /// Segunda saída virtual, para enviar o mesmo mix (mic + sons) a outro
+    /// dispositivo ao mesmo tempo. Null = padrão do sistema.
+    /// </summary>
+    public string? SecondaryOutputDeviceId { get; set; }
+
+    /// <summary>Se a segunda saída virtual começa habilitada.</summary>
+    public bool SecondaryOutputEnabled { get; set; }
+
     /// <summary>Se o monitoramento local começa habilitado.</summary>
     public bool MonitorEnabled { get; set; }
 

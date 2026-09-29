@@ -14,6 +14,12 @@ public class AppSettings
     /// <summary>ID do dispositivo de monitoramento local (fones). Null = padrão.</summary>
     public string? MonitorDeviceId { get; set; }
 
+    /// <summary>ID da segunda saída virtual (outro cabo/dispositivo). Null = padrão.</summary>
+    public string? SecondaryOutputDeviceId { get; set; }
+
+    /// <summary>Se a segunda saída virtual está habilitada.</summary>
+    public bool SecondaryOutputEnabled { get; set; }
+
     /// <summary>Volume do microfone no mix (0.0 a 2.0).</summary>
     public float MicVolume { get; set; } = 1.0f;
 

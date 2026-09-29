@@ -236,6 +236,55 @@
         </Setter>
     </Style>
 
+    <!-- Botão de loop: mesmo formato circular de tocar/parar. Ligado = anel branco + brilho forte. -->
+    <Style x:Key="LoopButton" TargetType="ToggleButton">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisualStyle}" />
+        <Setter Property="Content" Value="&#xE8EE;" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="{StaticResource LoopGradientBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="ToolTip" Value="Tocar em loop até parar" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid>
+                        <Ellipse x:Name="ring" Fill="{TemplateBinding Background}" StrokeThickness="0" Stroke="White">
+                            <Ellipse.Effect>
+                                <DropShadowEffect BlurRadius="16" ShadowDepth="0" Color="#2EC4B6" Opacity="0.4" />
+                            </Ellipse.Effect>
+                        </Ellipse>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ring" Property="Fill" Value="{StaticResource LoopGradientHoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="ring" Property="StrokeThickness" Value="2" />
+                            <Setter TargetName="ring" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="#2EC4B6" Opacity="0.9" />
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="ToolTip" Value="Parar repetição" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="ring" Property="RenderTransform">
+                                <Setter.Value><ScaleTransform ScaleX="0.92" ScaleY="0.92" /></Setter.Value>
+                            </Setter>
+                            <Setter TargetName="ring" Property="RenderTransformOrigin" Value="0.5,0.5" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Cartão de som (grade responsiva "Meus sons") -->
     <Style x:Key="SoundCard" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource CardBrush}" />
@@ -283,6 +332,19 @@
                 </DataTrigger.EnterActions>
                 <DataTrigger.ExitActions>
                     <StopStoryboard BeginStoryboardName="ShakeBeginStoryboard" />
+                </DataTrigger.ExitActions>
+            </DataTrigger>
+            <!-- Exclusão: esmaece o card (o contêiner em SoundboardView encolhe o espaço). -->
+            <DataTrigger Binding="{Binding Removendo}" Value="True">
+                <DataTrigger.EnterActions>
+                    <BeginStoryboard x:Name="CardFadeOut">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.18" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </DataTrigger.EnterActions>
+                <DataTrigger.ExitActions>
+                    <RemoveStoryboard BeginStoryboardName="CardFadeOut" />
                 </DataTrigger.ExitActions>
             </DataTrigger>
         </Style.Triggers>

@@ -180,9 +180,43 @@ public class SoundboardControllerTests : IDisposable
         Assert.True(_engine.NoiseGateEnabled);
     }
 
+    [Fact]
+    public void ToggleLoop_StartsEngineAndRepeats_ThenStopsOnlyLoop()
+    {
+        const string path = @"C:\sons\loop.wav";
+        _controller.ToggleLoopSound(path, 0.7f);
+
+        Assert.True(_engine.IsRunning);
+        Assert.Equal(path, Assert.Single(_controller.GetStatus().LoopingSoundPaths));
+        Assert.Equal(0.7f, Assert.Single(_engine.Played).Volume);
+        _controller.TriggerSound(path, 1f);
+        Assert.False(_engine.Played.Last().Loop);
+
+        _controller.ToggleLoopSound(path.ToUpperInvariant(), 0.7f);
+
+        Assert.Empty(_controller.GetStatus().LoopingSoundPaths);
+        Assert.False(Assert.Single(_engine.Played).Loop);
+    }
+
+    [Fact]
+    public async Task StopAndPanic_ClearLoopStatus()
+    {
+        const string path = @"C:\sons\loop.wav";
+        _controller.ToggleLoopSound(path, 1f);
+        _controller.StopSound(path);
+        Assert.Empty(_controller.GetStatus().LoopingSoundPaths);
+
+        _controller.ToggleLoopSound(path, 1f);
+        _settings.Current.PanicKey = "Ctrl+Alt+P";
+        await _controller.ReloadBindingsAsync();
+        _hook.Press("Ctrl+Alt+P");
+        Assert.True(WaitFor(() => _engine.Played.Count == 0));
+        Assert.Empty(_controller.GetStatus().LoopingSoundPaths);
+    }
+
     // ---- Fakes ----
 
-    private sealed class FakeHook : IGlobalKeyboardHook
+    internal sealed class FakeHook : IGlobalKeyboardHook
     {
         public bool IsInstalled { get; private set; }
         public event EventHandler<HotkeyPressedEventArgs>? HotkeyPressed;
@@ -198,9 +232,9 @@ public class SoundboardControllerTests : IDisposable
         }
     }
 
-    private sealed class FakeEngine : IMicInjectionEngine
+    internal sealed class FakeEngine : IMicInjectionEngine
     {
-        public record Sound(string Path, float Volume);
+        public record Sound(string Path, float Volume, bool Loop);
         public List<Sound> Played { get; } = new();
         public int StopAllCount { get; private set; }
 
@@ -210,9 +244,12 @@ public class SoundboardControllerTests : IDisposable
 
         public IReadOnlyList<string> GetActiveSoundPaths() =>
             Played.Select(p => p.Path).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        public IReadOnlyList<string> GetLoopingSoundPaths() =>
+            Played.Where(p => p.Loop).Select(p => p.Path).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         public float MicVolume { get; set; } = 1f;
         public float SoundboardVolume { get; set; } = 1f;
         public bool MonitorEnabled { get; set; }
+        public bool SecondaryOutputEnabled { get; set; }
         public bool NoiseSuppressionEnabled { get; set; }
         public bool NoiseGateEnabled { get; set; }
         public bool NoiseSuppressionAvailable { get; set; } = true;
@@ -228,9 +265,9 @@ public class SoundboardControllerTests : IDisposable
         }
         public void Stop() => Running = false;
 
-        public void PlaySound(string filePath, float volume = 1f)
+        public void PlaySound(string filePath, float volume = 1f, bool loop = false)
         {
-            Played.Add(new Sound(filePath, volume));
+            Played.Add(new Sound(filePath, volume, loop));
             ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -246,20 +283,26 @@ public class SoundboardControllerTests : IDisposable
             ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        public void StopLoopSound(string filePath)
+        {
+            Played.RemoveAll(p => p.Loop && string.Equals(p.Path, filePath, StringComparison.OrdinalIgnoreCase));
+            ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         public void Dispose()
         {
             _ = StoppedUnexpectedly; // silencia aviso de evento não usado
         }
     }
 
-    private sealed class FakeDevices : IAudioDeviceService
+    internal sealed class FakeDevices : IAudioDeviceService
     {
         public IReadOnlyList<AudioDeviceInfo> GetOutputDevices() => Array.Empty<AudioDeviceInfo>();
         public IReadOnlyList<AudioDeviceInfo> GetInputDevices() => Array.Empty<AudioDeviceInfo>();
         public AudioDeviceInfo? FindCableInput() => null;
     }
 
-    private sealed class FakeSettings : ISettingsService
+    internal sealed class FakeSettings : ISettingsService
     {
         public AppSettings Current { get; } = new();
         public void Save() { }

@@ -14,6 +14,7 @@ public class SoundboardStatus
     public bool CableDetected { get; init; }
     public int ActiveSounds { get; init; }
     public IReadOnlyList<string> ActiveSoundPaths { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> LoopingSoundPaths { get; init; } = Array.Empty<string>();
     public string? OutputDeviceName { get; init; }
     public string? MicDeviceName { get; init; }
 }
@@ -95,6 +96,8 @@ public class SoundboardController : IDisposable
                     OutputDeviceId = s.OutputDeviceId ?? _devices.FindCableInput()?.Id,
                     MonitorDeviceId = s.MonitorDeviceId,
                     MonitorEnabled = s.MonitorEnabled,
+                    SecondaryOutputDeviceId = s.SecondaryOutputDeviceId,
+                    SecondaryOutputEnabled = s.SecondaryOutputEnabled,
                     MicVolume = s.MicVolume,
                     SoundboardVolume = s.SoundboardVolume,
                     NoiseSuppressionEnabled = s.NoiseSuppressionEnabled,
@@ -132,7 +135,10 @@ public class SoundboardController : IDisposable
         _engine.NoiseSuppressionEnabled = s.NoiseSuppressionEnabled;
         _engine.NoiseGateEnabled = s.NoiseGateEnabled;
         if (_engine.IsRunning)
+        {
             _engine.MonitorEnabled = s.MonitorEnabled;
+            _engine.SecondaryOutputEnabled = s.SecondaryOutputEnabled;
+        }
     }
 
     /// <summary>False se a lib nativa do RNNoise não carregou no último start do motor.</summary>
@@ -173,13 +179,13 @@ public class SoundboardController : IDisposable
     }
 
     /// <summary>Dispara um som imediatamente (usado pelo hook e pelo botão "play" da UI).</summary>
-    public void TriggerSound(string filePath, float volume)
+    public void TriggerSound(string filePath, float volume, bool loop = false)
     {
         try
         {
             if (!_engine.IsRunning)
                 StartEngine();
-            _engine.PlaySound(filePath, volume);
+            _engine.PlaySound(filePath, volume, loop);
         }
         catch (FileNotFoundException)
         {
@@ -198,6 +204,14 @@ public class SoundboardController : IDisposable
 
     public void StopAllSounds() => _engine.StopAllSounds();
 
+    public void ToggleLoopSound(string filePath, float volume)
+    {
+        if (_engine.GetLoopingSoundPaths().Contains(filePath, StringComparer.OrdinalIgnoreCase))
+            _engine.StopLoopSound(filePath);
+        else
+            TriggerSound(filePath, volume, loop: true);
+    }
+
     /// <summary>Para um som específico (usado pelo botão play/stop do card ao ser clicado enquanto toca).</summary>
     public void StopSound(string filePath) => _engine.StopSound(filePath);
 
@@ -215,6 +229,7 @@ public class SoundboardController : IDisposable
             CableDetected = cable is not null,
             ActiveSounds = _engine.ActiveSoundCount,
             ActiveSoundPaths = _engine.GetActiveSoundPaths(),
+            LoopingSoundPaths = _engine.GetLoopingSoundPaths(),
             OutputDeviceName = outputName,
             MicDeviceName = micName,
         };

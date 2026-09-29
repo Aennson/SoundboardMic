@@ -63,6 +63,16 @@
         <GradientStop Offset="1" Color="#FF5470" />
     </LinearGradientBrush>
 
+    <!-- ==== Gradiente de "loop" (repetição contínua) ==== -->
+    <LinearGradientBrush x:Key="LoopGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#2EC4B6" />
+        <GradientStop Offset="1" Color="#15968C" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="LoopGradientHoverBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#4FD8CB" />
+        <GradientStop Offset="1" Color="#22ACA1" />
+    </LinearGradientBrush>
+
     <!-- ==== Estados ==== -->
     <SolidColorBrush x:Key="SuccessBrush" Color="#3DD68C" />
     <SolidColorBrush x:Key="DangerBrush" Color="#FF5C6C" />

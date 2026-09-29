@@ -21,6 +21,9 @@ public interface IMicInjectionEngine : IDisposable
     /// <summary>Snapshot dos caminhos dos sons tocando agora no mix principal (sem duplicar o monitor).</summary>
     IReadOnlyList<string> GetActiveSoundPaths();
 
+    /// <summary>Snapshot dos arquivos em repetição no mix principal.</summary>
+    IReadOnlyList<string> GetLoopingSoundPaths();
+
     /// <summary>Volume do microfone no mix (0.0 a 2.0). Ajustável em tempo real.</summary>
     float MicVolume { get; set; }
 
@@ -29,6 +32,12 @@ public interface IMicInjectionEngine : IDisposable
 
     /// <summary>Liga/desliga o monitoramento local. Ajustável em tempo real.</summary>
     bool MonitorEnabled { get; set; }
+
+    /// <summary>
+    /// Liga/desliga a segunda saída virtual (mesmo mix de mic + sons em outro
+    /// dispositivo). Ajustável em tempo real.
+    /// </summary>
+    bool SecondaryOutputEnabled { get; set; }
 
     /// <summary>Liga/desliga a supressão de ruído (RNNoise) do mic. Ajustável em tempo real.</summary>
     bool NoiseSuppressionEnabled { get; set; }
@@ -59,7 +68,10 @@ public interface IMicInjectionEngine : IDisposable
     /// Vários sons podem tocar simultaneamente.
     /// </summary>
     /// <exception cref="InvalidOperationException">Motor não está rodando.</exception>
-    void PlaySound(string filePath, float volume = 1.0f);
+    void PlaySound(string filePath, float volume = 1.0f, bool loop = false);
+
+    /// <summary>Interrompe apenas as instâncias em loop deste arquivo, incluindo o monitor.</summary>
+    void StopLoopSound(string filePath);
 
     /// <summary>Tecla de pânico: interrompe todos os sons do soundboard (mic continua).</summary>
     void StopAllSounds();

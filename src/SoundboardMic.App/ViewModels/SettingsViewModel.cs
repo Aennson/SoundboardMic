@@ -51,14 +51,17 @@ public partial class SettingsViewModel : ObservableObject
     public ObservableCollection<DeviceOption> MicDevices { get; } = new();
     public ObservableCollection<DeviceOption> OutputDevices { get; } = new();
     public ObservableCollection<DeviceOption> MonitorDevices { get; } = new();
+    public ObservableCollection<DeviceOption> SecondaryOutputDevices { get; } = new();
 
     [ObservableProperty] private DeviceOption? _selectedMic;
     [ObservableProperty] private DeviceOption? _selectedOutput;
     [ObservableProperty] private DeviceOption? _selectedMonitor;
+    [ObservableProperty] private DeviceOption? _selectedSecondaryOutput;
 
     [ObservableProperty] private double _micVolume = 1.0;
     [ObservableProperty] private double _soundboardVolume = 1.0;
     [ObservableProperty] private bool _monitorEnabled;
+    [ObservableProperty] private bool _secondaryOutputEnabled;
     [ObservableProperty] private bool _noiseSuppressionEnabled;
     [ObservableProperty] private bool _noiseGateEnabled;
     [ObservableProperty] private bool _noiseSuppressionAvailable = true;
@@ -81,10 +84,13 @@ public partial class SettingsViewModel : ObservableObject
         SelectedMic = MicDevices.FirstOrDefault(d => d.Id == s.MicDeviceId) ?? MicDevices.FirstOrDefault();
         SelectedOutput = OutputDevices.FirstOrDefault(d => d.Id == s.OutputDeviceId) ?? OutputDevices.FirstOrDefault();
         SelectedMonitor = MonitorDevices.FirstOrDefault(d => d.Id == s.MonitorDeviceId) ?? MonitorDevices.FirstOrDefault();
+        SelectedSecondaryOutput = SecondaryOutputDevices.FirstOrDefault(d => d.Id == s.SecondaryOutputDeviceId)
+            ?? SecondaryOutputDevices.FirstOrDefault();
 
         MicVolume = s.MicVolume;
         SoundboardVolume = s.SoundboardVolume;
         MonitorEnabled = s.MonitorEnabled;
+        SecondaryOutputEnabled = s.SecondaryOutputEnabled;
         NoiseSuppressionEnabled = s.NoiseSuppressionEnabled;
         NoiseGateEnabled = s.NoiseGateEnabled;
         NoiseSuppressionAvailable = _controller.NoiseSuppressionAvailable;
@@ -115,6 +121,11 @@ public partial class SettingsViewModel : ObservableObject
         foreach (var d in _devices.GetOutputDevices())
             MonitorDevices.Add(DeviceOption.From(d));
 
+        SecondaryOutputDevices.Clear();
+        SecondaryOutputDevices.Add(DeviceOption.Default("saída"));
+        foreach (var d in _devices.GetOutputDevices())
+            SecondaryOutputDevices.Add(DeviceOption.From(d));
+
         var cable = _devices.FindCableInput();
         CableDetected = cable is not null;
         CableNome = cable?.Nome;
@@ -125,6 +136,13 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnSelectedMicChanged(DeviceOption? value) => Persist(s => s.MicDeviceId = value?.Id);
     partial void OnSelectedOutputChanged(DeviceOption? value) => Persist(s => s.OutputDeviceId = value?.Id);
     partial void OnSelectedMonitorChanged(DeviceOption? value) => Persist(s => s.MonitorDeviceId = value?.Id);
+    partial void OnSelectedSecondaryOutputChanged(DeviceOption? value)
+        => Persist(s => s.SecondaryOutputDeviceId = value?.Id);
+    partial void OnSecondaryOutputEnabledChanged(bool value)
+    {
+        Persist(s => s.SecondaryOutputEnabled = value);
+        _controller.ApplyRuntimeSettings();
+    }
     partial void OnMonitorEnabledChanged(bool value)
     {
         Persist(s => s.MonitorEnabled = value);

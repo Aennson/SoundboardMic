@@ -85,7 +85,8 @@ public partial class App : Application
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IStartupService, StartupService>();
         services.AddSingleton<IDialogService, DialogService>();
-        services.AddSingleton<AudioFileCache>();
+        services.AddSingleton(_ => new AudioFileCache());
+        services.AddSingleton<AudioTrimService>();
         services.AddSingleton<SoundboardController>();
         services.AddSingleton(new System.Net.Http.HttpClient());
         services.AddSingleton<IMyInstantsService, MyInstantsService>();
@@ -94,6 +95,7 @@ public partial class App : Application
         services.AddSingleton<QuickBarService>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MyInstantsViewModel>();
+        services.AddSingleton<EditorDeSonsViewModel>();
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
         services.AddSingleton<QuickBarViewModel>();

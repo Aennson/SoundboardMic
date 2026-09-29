@@ -60,13 +60,29 @@ public class MicInjectionEngine : IMicInjectionEngine
     private string? _monitorDeviceId;
     private bool _monitorEnabled;
 
+    // Segunda saída virtual: réplica independente do mix principal (mic + sons),
+    // com buffer de mic e cadeia de ruído próprios para não competir pelo mesmo leitor.
+    private BufferedWaveProvider? _secondaryMicBuffer;
+    private IRnNoiseProcessor? _secondaryRnNoiseProcessor;
+    private RnNoiseSampleProvider? _secondaryRnNoiseProvider;
+    private NoiseGateSampleProvider? _secondaryNoiseGateProvider;
+    private VolumeSampleProvider? _secondaryMicVolumeProvider;
+    private MixingSampleProvider? _secondarySoundMixer;
+    private VolumeSampleProvider? _secondarySoundVolumeProvider;
+    private MixingSampleProvider? _secondaryMainMixer;
+    private LimiterSampleProvider? _secondaryLimiter;
+    private WasapiOut? _secondaryOutput;
+    private MMDevice? _secondaryDevice;
+    private string? _secondaryDeviceId;
+    private bool _secondaryEnabled;
+
     private float _micVolume = 1.0f;
     private float _soundboardVolume = 1.0f;
     private bool _isRunning;
     private bool _stopping;
 
     private sealed record ActiveSound(
-        ISampleProvider Input, WaveStream Reader, MixingSampleProvider Owner, string FilePath);
+        ISampleProvider Input, WaveStream Reader, MixingSampleProvider Owner, string FilePath, bool Loop);
 
     private readonly List<ActiveSound> _activeSounds = new();
 
@@ -106,8 +122,20 @@ public class MicInjectionEngine : IMicInjectionEngine
                 _micVolume = Math.Clamp(value, 0f, 2f);
                 if (_micVolumeProvider is not null)
                     _micVolumeProvider.Volume = VolumeCurve.ToGain(_micVolume);
+                if (_secondaryMicVolumeProvider is not null)
+                    _secondaryMicVolumeProvider.Volume = VolumeCurve.ToGain(_micVolume);
             }
         }
+    }
+
+    public IReadOnlyList<string> GetLoopingSoundPaths()
+    {
+        lock (_lock)
+            return _activeSounds
+                .Where(s => s.Loop && ReferenceEquals(s.Owner, _soundMixer))
+                .Select(s => s.FilePath)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
     }
 
     public float SoundboardVolume
@@ -122,6 +150,8 @@ public class MicInjectionEngine : IMicInjectionEngine
                     _soundboardVolumeProvider.Volume = VolumeCurve.ToGain(_soundboardVolume);
                 if (_monitorVolumeProvider is not null)
                     _monitorVolumeProvider.Volume = VolumeCurve.ToGain(_soundboardVolume);
+                if (_secondarySoundVolumeProvider is not null)
+                    _secondarySoundVolumeProvider.Volume = VolumeCurve.ToGain(_soundboardVolume);
             }
         }
     }
@@ -146,6 +176,26 @@ public class MicInjectionEngine : IMicInjectionEngine
         }
     }
 
+    public bool SecondaryOutputEnabled
+    {
+        get { lock (_lock) return _secondaryEnabled; }
+        set
+        {
+            lock (_lock)
+            {
+                if (_secondaryEnabled == value)
+                    return;
+                _secondaryEnabled = value;
+                if (!_isRunning)
+                    return;
+                if (value)
+                    StartSecondaryCore();
+                else
+                    StopSecondaryCore();
+            }
+        }
+    }
+
     public bool NoiseSuppressionEnabled
     {
         get { lock (_lock) return _noiseSuppressionEnabled; }
@@ -156,6 +206,8 @@ public class MicInjectionEngine : IMicInjectionEngine
                 _noiseSuppressionEnabled = value;
                 if (_rnNoiseProvider is not null)
                     _rnNoiseProvider.Enabled = value;
+                if (_secondaryRnNoiseProvider is not null)
+                    _secondaryRnNoiseProvider.Enabled = value;
             }
         }
     }
@@ -170,6 +222,8 @@ public class MicInjectionEngine : IMicInjectionEngine
                 _noiseGateEnabled = value;
                 if (_noiseGateProvider is not null)
                     _noiseGateProvider.Enabled = value;
+                if (_secondaryNoiseGateProvider is not null)
+                    _secondaryNoiseGateProvider.Enabled = value;
             }
         }
     }
@@ -199,6 +253,8 @@ public class MicInjectionEngine : IMicInjectionEngine
             _soundboardVolume = Math.Clamp(options.SoundboardVolume, 0f, 2f);
             _monitorDeviceId = options.MonitorDeviceId;
             _monitorEnabled = options.MonitorEnabled;
+            _secondaryDeviceId = options.SecondaryOutputDeviceId;
+            _secondaryEnabled = options.SecondaryOutputEnabled;
             _noiseSuppressionEnabled = options.NoiseSuppressionEnabled;
             _noiseGateEnabled = options.NoiseGateEnabled;
 
@@ -272,6 +328,10 @@ public class MicInjectionEngine : IMicInjectionEngine
                 // 4. Monitoramento local opcional.
                 if (_monitorEnabled)
                     StartMonitorCore();
+
+                // 5. Segunda saída virtual opcional (mesmo mix em outro dispositivo).
+                if (_secondaryEnabled)
+                    StartSecondaryCore();
             }
             catch
             {
@@ -288,7 +348,7 @@ public class MicInjectionEngine : IMicInjectionEngine
         ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void PlaySound(string filePath, float volume = 1.0f)
+    public void PlaySound(string filePath, float volume = 1.0f, bool loop = false)
     {
         lock (_lock)
         {
@@ -296,12 +356,16 @@ public class MicInjectionEngine : IMicInjectionEngine
                 throw new InvalidOperationException(
                     "O motor de injeção não está rodando; inicie-o antes de disparar sons.");
 
-            AddSoundTo(_soundMixer, filePath, volume);
+            AddSoundTo(_soundMixer, filePath, volume, loop);
 
             // Monitor usa um reader próprio: o mesmo stream não pode alimentar
             // dois outputs em ritmos diferentes.
             if (_monitorEnabled && _monitorMixer is not null)
-                AddSoundTo(_monitorMixer, filePath, volume);
+                AddSoundTo(_monitorMixer, filePath, volume, loop);
+
+            // Mesma regra para a segunda saída virtual.
+            if (_secondarySoundMixer is not null)
+                AddSoundTo(_secondarySoundMixer, filePath, volume, loop);
         }
         ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -323,11 +387,17 @@ public class MicInjectionEngine : IMicInjectionEngine
         ActiveSoundsChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void StopSound(string filePath)
+    public void StopSound(string filePath) => StopSound(filePath, loopsOnly: false);
+
+    public void StopLoopSound(string filePath) => StopSound(filePath, loopsOnly: true);
+
+    private void StopSound(string filePath, bool loopsOnly)
     {
         lock (_lock)
         {
-            var matches = _activeSounds.Where(s => string.Equals(s.FilePath, filePath, StringComparison.OrdinalIgnoreCase)).ToList();
+            var matches = _activeSounds.Where(s =>
+                (!loopsOnly || s.Loop) &&
+                string.Equals(s.FilePath, filePath, StringComparison.OrdinalIgnoreCase)).ToList();
             if (matches.Count == 0)
                 return;
 
@@ -350,16 +420,18 @@ public class MicInjectionEngine : IMicInjectionEngine
 
     // ---- internos (sempre chamados sob _lock) ----
 
-    private void AddSoundTo(MixingSampleProvider mixer, string filePath, float volume)
+    private void AddSoundTo(MixingSampleProvider mixer, string filePath, float volume, bool loop)
     {
         var reader = AudioFileDecoder.OpenRead(filePath);
         try
         {
+            if (loop)
+                reader = new LoopingWaveStream(reader);
             var chain = SampleProviderConverter.ConvertToFormat(
                 AudioFileDecoder.ToSampleProvider(reader), MixFormat);
             var input = new VolumeSampleProvider(chain) { Volume = VolumeCurve.ToGain(Math.Clamp(volume, 0f, 2f)) };
 
-            _activeSounds.Add(new ActiveSound(input, reader, mixer, filePath));
+            _activeSounds.Add(new ActiveSound(input, reader, mixer, filePath, loop));
             mixer.AddMixerInput((ISampleProvider)input);
         }
         catch
@@ -413,6 +485,114 @@ public class MicInjectionEngine : IMicInjectionEngine
         _monitorLimiter = null;
     }
 
+    /// <summary>
+    /// Sobe a segunda saída virtual: uma réplica completa do mix principal
+    /// (mic + sons) com buffer e leitores próprios, já que um mesmo provider
+    /// não pode alimentar dois dispositivos em ritmos diferentes.
+    /// </summary>
+    private void StartSecondaryCore()
+    {
+        if (_secondaryOutput is not null || _capture is null)
+            return;
+
+        var device = AudioDeviceService.ResolveDevice(_secondaryDeviceId, DataFlow.Render);
+
+        // Mesmo dispositivo da saída principal duplicaria o áudio: ignora.
+        if (_outputDevice is not null && string.Equals(device.ID, _outputDevice.ID, StringComparison.OrdinalIgnoreCase))
+        {
+            device.Dispose();
+            return;
+        }
+
+        try
+        {
+            _secondaryDevice = device;
+            _secondaryMicBuffer = new BufferedWaveProvider(_capture.WaveFormat)
+            {
+                BufferDuration = TimeSpan.FromMilliseconds(MicBufferDurationMs),
+                DiscardOnBufferOverflow = true,
+            };
+
+            ISampleProvider micChain = SampleProviderConverter.ConvertToFormat(
+                _secondaryMicBuffer.ToSampleProvider(), MonoMixFormat);
+
+            if (_noiseSuppressionAvailable
+                && RnNoiseProcessor.TryCreate(out _secondaryRnNoiseProcessor, out _))
+            {
+                _secondaryRnNoiseProvider = new RnNoiseSampleProvider(micChain, _secondaryRnNoiseProcessor!)
+                {
+                    Enabled = _noiseSuppressionEnabled,
+                };
+                micChain = _secondaryRnNoiseProvider;
+            }
+
+            _secondaryNoiseGateProvider = new NoiseGateSampleProvider(micChain)
+            {
+                Enabled = _noiseGateEnabled,
+            };
+            var micStereo = new MonoToStereoSampleProvider(_secondaryNoiseGateProvider);
+            _secondaryMicVolumeProvider = new VolumeSampleProvider(micStereo)
+            {
+                Volume = VolumeCurve.ToGain(_micVolume),
+            };
+
+            _secondarySoundMixer = new MixingSampleProvider(MixFormat) { ReadFully = true };
+            _secondarySoundMixer.MixerInputEnded += OnMixerInputEnded;
+            _secondarySoundVolumeProvider = new VolumeSampleProvider(_secondarySoundMixer)
+            {
+                Volume = VolumeCurve.ToGain(_soundboardVolume),
+            };
+
+            _secondaryMainMixer = new MixingSampleProvider(MixFormat) { ReadFully = true };
+            _secondaryMainMixer.AddMixerInput(_secondaryMicVolumeProvider);
+            _secondaryMainMixer.AddMixerInput(_secondarySoundVolumeProvider);
+
+            _secondaryLimiter = new LimiterSampleProvider(_secondaryMainMixer);
+            _secondaryOutput = new WasapiOut(_secondaryDevice, AudioClientShareMode.Shared,
+                useEventSync: true, OutputLatencyMs);
+            _secondaryOutput.Init(_secondaryLimiter);
+            _secondaryOutput.Play();
+        }
+        catch
+        {
+            StopSecondaryCore();
+            throw;
+        }
+    }
+
+    private void StopSecondaryCore()
+    {
+        if (_secondarySoundMixer is not null)
+            _secondarySoundMixer.MixerInputEnded -= OnMixerInputEnded;
+
+        _secondaryOutput?.Dispose();
+        _secondaryOutput = null;
+        _secondaryDevice?.Dispose();
+        _secondaryDevice = null;
+
+        // Descarta sons pendentes da segunda saída.
+        for (var i = _activeSounds.Count - 1; i >= 0; i--)
+        {
+            if (ReferenceEquals(_activeSounds[i].Owner, _secondarySoundMixer))
+            {
+                _secondarySoundMixer?.RemoveMixerInput(_activeSounds[i].Input);
+                _activeSounds[i].Reader.Dispose();
+                _activeSounds.RemoveAt(i);
+            }
+        }
+
+        _secondaryRnNoiseProcessor?.Dispose();
+        _secondaryRnNoiseProcessor = null;
+        _secondaryRnNoiseProvider = null;
+        _secondaryNoiseGateProvider = null;
+        _secondaryMicBuffer = null;
+        _secondaryMicVolumeProvider = null;
+        _secondarySoundMixer = null;
+        _secondarySoundVolumeProvider = null;
+        _secondaryMainMixer = null;
+        _secondaryLimiter = null;
+    }
+
     private void StopCore()
     {
         _stopping = true;
@@ -439,6 +619,7 @@ public class MicInjectionEngine : IMicInjectionEngine
             _outputDevice = null;
 
             StopMonitorCore();
+            StopSecondaryCore();
 
             foreach (var sound in _activeSounds)
                 sound.Reader.Dispose();
@@ -467,6 +648,7 @@ public class MicInjectionEngine : IMicInjectionEngine
     {
         // Thread de captura do WASAPI: só enfileira os bytes.
         _micBuffer?.AddSamples(e.Buffer, 0, e.BytesRecorded);
+        _secondaryMicBuffer?.AddSamples(e.Buffer, 0, e.BytesRecorded);
     }
 
     private void OnMixerInputEnded(object? sender, SampleProviderEventArgs e)

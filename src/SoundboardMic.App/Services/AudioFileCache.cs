@@ -13,9 +13,16 @@ namespace SoundboardMic.App.Services;
 /// </summary>
 public class AudioFileCache
 {
-    private static readonly string CacheDirectory = Path.Combine(
+    private static readonly string DiretorioPadrao = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "SoundboardMic", "AudioCache");
+
+    private readonly string CacheDirectory;
+
+    public AudioFileCache() : this(DiretorioPadrao) { }
+
+    /// <summary>Permite apontar o cache para outra pasta (usado nos testes).</summary>
+    public AudioFileCache(string diretorio) => CacheDirectory = diretorio;
 
     /// <summary>Lê os bytes do arquivo escolhido pelo usuário e grava uma cópia própria no cache.</summary>
     public async Task<(string CaminhoCache, byte[] Conteudo, string NomeOriginal)> ImportarAsync(

@@ -89,6 +89,10 @@
                                      IsChecked="{Binding MostrandoMyInstants, Mode=OneWay}"
                                      Command="{Binding MostrarMyInstantsCommand}" Tag="&#xE774;" Content="Sons da web"
                                      Margin="0,6,0,0" />
+                        <RadioButton x:Name="NavEditor" GroupName="nav" Style="{StaticResource NavButton}"
+                                     IsChecked="{Binding MostrandoEditor, Mode=OneWay}"
+                                     Command="{Binding MostrarEditorCommand}" Tag="&#xE8C6;" Content="Editor de sons"
+                                     Margin="0,6,0,0" />
                         <RadioButton x:Name="NavConfig" GroupName="nav" Style="{StaticResource NavButton}"
                                      IsChecked="{Binding MostrandoConfiguracoes, Mode=OneWay}"
                                      Command="{Binding MostrarConfigCommand}" Tag="&#xE713;" Content="Configurações"
@@ -185,6 +189,9 @@
                                         <DataTrigger Binding="{Binding MostrandoMyInstants}" Value="True">
                                             <Setter Property="Text" Value="Sons da web" />
                                         </DataTrigger>
+                                        <DataTrigger Binding="{Binding MostrandoEditor}" Value="True">
+                                            <Setter Property="Text" Value="Editor de sons" />
+                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding MostrandoConfiguracoes}" Value="True">
                                             <Setter Property="Text" Value="Configurações" />
                                         </DataTrigger>
@@ -278,6 +285,8 @@
                         Visibility="{Binding MostrandoSons, Converter={StaticResource BoolToVis}}" />
                     <views:MyInstantsView DataContext="{Binding MyInstants}"
                         Visibility="{Binding DataContext.MostrandoMyInstants, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                    <views:EditorDeSonsView DataContext="{Binding EditorDeSons}"
+                           Visibility="{Binding DataContext.MostrandoEditor, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
                     <views:SettingsView DataContext="{Binding Settings}"
                         Visibility="{Binding DataContext.MostrandoConfiguracoes, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
                 </Grid>

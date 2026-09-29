@@ -27,4 +27,7 @@ public partial class CategoriaGroupViewModel : ObservableObject
     public bool SemCategoria => CategoriaId is null;
 
     public ObservableCollection<AudioItemViewModel> Itens { get; } = new();
+
+    /// <summary>True enquanto a seção anima a saída (último card excluído).</summary>
+    [ObservableProperty] private bool _removendo;
 }

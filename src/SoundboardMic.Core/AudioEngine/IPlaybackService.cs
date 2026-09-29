@@ -20,6 +20,15 @@ public interface IPlaybackService : IDisposable
     /// <param name="volume">Volume linear (0.0 a 2.0; 1.0 = original).</param>
     void Play(string filePath, string? deviceId = null, float volume = 1.0f);
 
+    /// <summary>
+    /// Reproduz apenas o trecho [<paramref name="start"/>, <paramref name="end"/>) do arquivo.
+    /// Interrompe qualquer reprodução anterior.
+    /// </summary>
+    void PlayRange(string filePath, TimeSpan start, TimeSpan end, string? deviceId = null, float volume = 1.0f);
+
+    /// <summary>Posição atual no arquivo em reprodução (zero quando parado).</summary>
+    TimeSpan Position { get; }
+
     /// <summary>Para a reprodução atual imediatamente (no-op se nada tocando).</summary>
     void Stop();
 }

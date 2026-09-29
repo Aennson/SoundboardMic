@@ -12,12 +12,28 @@ Construído em **.NET 8 / WPF** com **NAudio** (WASAPI), **SQLite** e hook globa
 ## ✨ Recursos
 
 - 🎵 **Cadastro de áudios** (.mp3, .wav, .ogg) com nome amigável, preview e volume individual.
+- 🔁 **Repetição por áudio**: nos cards, use o botão entre tocar e parar para iniciar um
+  loop contínuo. Clique novamente para parar só a repetição; **Parar** interrompe todas
+  as instâncias daquele som e a tecla de pânico interrompe todos os sons, inclusive loops.
+  O loop também é reproduzido no monitoramento local, quando habilitado.
+- **Categorias no editor**: digite um nome ou clique em uma categoria existente.
+  O modal ampliado exibe os campos sem rolagem. Deixe em branco para remover a categoria.
+- **Reordenar sons**: clique e arraste um card sobre outro da mesma categoria para mudar
+  sua posição. A ordem das categorias continua nas setas do cabeçalho de cada grupo.
+- **Excluir pelo card**: o botão de lixeira, abaixo de editar, remove o áudio (com confirmação); o card esmaece e encolhe sem recarregar a grade.
+- **Entrada animada**: ao abrir a tela, as categorias surgem uma após a outra crescendo suavemente, e os cards de cada uma aparecem em seguida (respeita a opção de animações do Windows).
+- ✂️ **Editor de sons**: nova aba para cortar áudios. Pesquise o som por nome, arraste as
+  alças sobre a forma de onda (ou digite início/fim), ouça só o trecho nos fones e salve
+  como **novo áudio** ou **substitua o original**. O botão de tesoura no card abre o
+  editor já com aquele som. Detalhes em [docs/etapa-9-editor-de-sons.md](docs/etapa-9-editor-de-sons.md).
 - ⌨️ **Atalhos globais personalizáveis** (ex.: `Ctrl+Alt+F1`) que funcionam mesmo com o app
   minimizado ou sem foco.
 - 🎚️ **Mixagem em tempo real** do microfone físico + sons do soundboard, com resampling
   automático e latência baixa.
 - 🔴 **Tecla de pânico** global que interrompe imediatamente todos os sons.
 - 🎧 **Monitoramento local**: ouça os sons também nos seus fones enquanto injeta.
+- 🔀 **Duas saídas virtuais**: transmita o mesmo mix (mic + sons) para dois
+  dispositivos ao mesmo tempo.
 - 🤫 **Supressão de ruído do microfone**: RNNoise (rede neural) e/ou noise gate,
   cada um com liga/desliga próprio — só o mic é tratado, os sons ficam intactos.
 - 🧲 **Barra rápida flutuante**: janela sempre visível (vertical ou horizontal) com
@@ -77,6 +93,9 @@ dotnet publish src/SoundboardMic.App -c Release -r win-x64 --self-contained fals
 2. Abra o **SoundboardMic** e vá em **Configurações**:
    - **Microfone (entrada)**: seu microfone físico.
    - **Saída virtual — CABLE Input**: selecione **CABLE Input (VB-Audio Virtual Cable)**.
+   - **Segunda saída virtual** (opcional): ligue o toggle **Transmitir em dois
+     dispositivos** e escolha outro dispositivo/cabo para receber o mesmo mix
+     (mic + sons) em paralelo.
    - **Monitoramento local — fones** (opcional): seus fones, se quiser ouvir os sons.
 3. Volte para **Meus sons**, clique em **Adicionar** e cadastre um áudio:
    - Escolha o arquivo, dê um nome, ajuste o volume.
@@ -123,8 +142,12 @@ Solução em camadas:
 mic físico (WasapiCapture) → buffer → 48k mono → rnnoise → gate → estéreo → volume ─┐
                                                                                     ├─ mixer → CABLE Input (WasapiOut)
 sons do soundboard → resample/canais → volume ── mixer de sons ─────────────────────┘
-                                              └─→ mixer de monitor → fones (opcional)
+                                              ├─→ mixer de monitor → fones (opcional)
+                                              └─→ réplica (mic + sons) → 2ª saída virtual (opcional)
 ```
+
+Cada saída extra tem leitores e buffer de mic próprios: um mesmo provider não pode
+alimentar dois dispositivos em ritmos diferentes.
 
 O mix interno é float 32-bit, 48 kHz, estéreo; qualquer formato de mic/arquivo é convertido
 automaticamente. O hook global (`Core/Hotkeys/GlobalKeyboardHook`) usa `SetWindowsHookEx`

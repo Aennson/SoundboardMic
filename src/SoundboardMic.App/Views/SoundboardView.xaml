@@ -1,9 +1,10 @@
-<UserControl x:Class="SoundboardMic.App.Views.SoundboardView"
+﻿<UserControl x:Class="SoundboardMic.App.Views.SoundboardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:SoundboardMic.App.ViewModels"
+             xmlns:behaviors="clr-namespace:SoundboardMic.App.Behaviors"
              mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="820"
              FontFamily="{StaticResource AppFont}">
 
@@ -86,6 +87,40 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
 
+                <!-- Seções entram em sequência crescendo na vertical (espelho da exclusão) e somem
+                     encolhendo quando o último card dela é excluído. -->
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="ContentPresenter">
+                        <Setter Property="behaviors:EntradaEscalonada.Grupo" Value="True" />
+                        <Setter Property="LayoutTransform">
+                            <Setter.Value>
+                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Removendo}" Value="True">
+                                <Setter Property="IsHitTestVisible" Value="False" />
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard x:Name="GrupoSaida">
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                             To="0" Duration="0:0:0.18" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleY)"
+                                                             To="0" BeginTime="0:0:0.06" Duration="0:0:0.24">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseInOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <RemoveStoryboard BeginStoryboardName="GrupoSaida" />
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type vm:CategoriaGroupViewModel}">
                         <StackPanel Margin="0,0,0,22">
@@ -120,39 +155,90 @@
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
 
-                                <!-- Entrada suave: cada card nasce invisível/deslocado e some para o lugar (efeito "lazy load"). -->
+                                <!-- Entrada suave: os cards da seção crescem e esmaecem para dentro logo após ela abrir. -->
                                 <ItemsControl.ItemContainerStyle>
                                     <Style TargetType="ContentPresenter">
-                                        <Setter Property="Opacity" Value="0" />
+                                        <Setter Property="behaviors:EntradaEscalonada.Card" Value="True" />
                                         <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+                                        <Setter Property="LayoutTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                                            </Setter.Value>
+                                        </Setter>
                                         <Setter Property="RenderTransform">
                                             <Setter.Value>
-                                                <TranslateTransform Y="14" />
+                                                <ScaleTransform ScaleX="1" ScaleY="1" />
                                             </Setter.Value>
                                         </Setter>
                                         <Style.Triggers>
-                                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
-                                                                         From="0" To="1" Duration="0:0:0.32" />
-                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
-                                                                         From="14" To="0" Duration="0:0:0.32">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <QuadraticEase EasingMode="EaseOut" />
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </EventTrigger>
+                                            <!-- Edição salva: só o card alterado repete a entrada suave. -->
+                                            <DataTrigger Binding="{Binding Entrando}" Value="True">
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard x:Name="CardEntrada">
+                                                        <Storyboard FillBehavior="Stop">
+                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                             From="0" To="1" Duration="0:0:0.26">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <QuadraticEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                             From="0.6" To="1" Duration="0:0:0.26">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                             From="0.6" To="1" Duration="0:0:0.26">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                            </DataTrigger>
+
+                                            <!-- Exclusão: o card esmaece e encolhe; os vizinhos deslizam para o lugar. -->
+                                            <DataTrigger Binding="{Binding Removendo}" Value="True">
+                                                <Setter Property="IsHitTestVisible" Value="False" />
+                                                <DataTrigger.EnterActions>
+                                                    <BeginStoryboard x:Name="CardSaida">
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleX)"
+                                                                             To="0" BeginTime="0:0:0.06" Duration="0:0:0.24">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseInOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleY)"
+                                                                             To="0.6" BeginTime="0:0:0.06" Duration="0:0:0.24">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CubicEase EasingMode="EaseInOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </DataTrigger.EnterActions>
+                                                <DataTrigger.ExitActions>
+                                                    <RemoveStoryboard BeginStoryboardName="CardSaida" />
+                                                </DataTrigger.ExitActions>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </ItemsControl.ItemContainerStyle>
 
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="{x:Type vm:AudioItemViewModel}">
-                                        <!-- Card: largura fixa ~134px → 5 por linha na largura padrão da janela -->
-                                        <Border Style="{StaticResource SoundCard}" Width="134" Margin="0,0,12,12" Padding="12,12,12,10">
+                                        <!-- Card: arraste para reordenar dentro da categoria -->
+                                        <Border Style="{StaticResource SoundCard}" Width="190" Margin="0,0,12,12" Padding="12,12,12,10"
+                                                AllowDrop="True" Cursor="SizeAll"
+                                                PreviewMouseLeftButtonDown="Card_PreviewMouseLeftButtonDown"
+                                                PreviewMouseMove="Card_PreviewMouseMove"
+                                                DragEnter="Card_DragOver"
+                                                DragOver="Card_DragOver"
+                                                DragLeave="Card_DragLeave"
+                                                Drop="Card_Drop">
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto" />
@@ -162,7 +248,7 @@
                                                     <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
-                                                <!-- Cabeçalho: ícone/cor do áudio + mover + editar -->
+                                                <!-- Cabeçalho: ícone/cor do áudio + duração/volume + editar/excluir -->
                                                 <Grid Grid.Row="0">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto" />
@@ -171,29 +257,48 @@
                                                     </Grid.ColumnDefinitions>
 
                                                     <!-- Ícone do card = mesmo ícone/cor escolhidos no editor -->
-                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="10"
+                                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="10" VerticalAlignment="Top"
                                                             Background="{Binding Cor, Converter={StaticResource HexToBrush}}">
                                                         <TextBlock Text="{Binding Icone, Converter={StaticResource CodepointToGlyph}}"
                                                                    Style="{StaticResource Glyph}" FontSize="16" Foreground="White" />
                                                     </Border>
 
-                                                    <!-- Mover dentro da categoria -->
-                                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
-                                                        <Button Style="{StaticResource IconButton}" Content="&#xE70E;"
-                                                                Width="24" Height="24" FontSize="9"
-                                                                AutomationProperties.Name="Mover áudio para cima"
-                                                                Command="{Binding DataContext.MoverAudioAcimaCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                                CommandParameter="{Binding}" ToolTip="Mover para cima" />
-                                                        <Button Style="{StaticResource IconButton}" Content="&#xE70D;"
-                                                                Width="24" Height="24" FontSize="9" Margin="2,0,0,0"
-                                                                AutomationProperties.Name="Mover áudio para baixo"
-                                                                Command="{Binding DataContext.MoverAudioAbaixoCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                                CommandParameter="{Binding}" ToolTip="Mover para baixo" />
+                                                    <!-- Duração + volume, centralizados na altura do ícone (36px) -->
+                                                    <Grid Grid.Column="1" Height="36" VerticalAlignment="Top" Margin="10,0,6,0">
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" ToolTip="Duração">
+                                                            <TextBlock Text="&#xE916;" Style="{StaticResource Glyph}" FontSize="10"
+                                                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,5,0" />
+                                                            <TextBlock Text="{Binding DuracaoTexto}" Style="{StaticResource Caption}" />
+                                                        </StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0" ToolTip="Volume">
+                                                            <TextBlock Text="&#xE767;" Style="{StaticResource Glyph}" FontSize="10"
+                                                                       Foreground="{StaticResource TextMutedBrush}" Margin="0,0,5,0" />
+                                                            <TextBlock Text="{Binding VolumeTexto}" Style="{StaticResource Caption}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    </Grid>
+
+                                                    <!-- Ações: Cortar ao lado de Editar; Excluir abaixo de Editar -->
+                                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,-5,0,0">
+                                                    <Button Style="{StaticResource IconButton}" Content="&#xE8C6;"
+                                                            Width="24" Height="24" FontSize="12" Margin="0,0,2,0"
+                                                            VerticalAlignment="Top"
+                                                            AutomationProperties.Name="Cortar áudio"
+                                                            Command="{Binding DataContext.CortarAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                            CommandParameter="{Binding}" ToolTip="Cortar no Editor de sons" />
+                                                    <StackPanel VerticalAlignment="Top">
                                                         <Button Style="{StaticResource IconButton}" Content="&#xE70F;"
-                                                                Width="24" Height="24" FontSize="12" Margin="2,0,0,0"
+                                                                Width="24" Height="24" FontSize="12"
                                                                 AutomationProperties.Name="Editar áudio"
                                                                 Command="{Binding DataContext.EditarAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                 CommandParameter="{Binding}" ToolTip="Editar" />
+                                                        <Button Style="{StaticResource IconButtonDanger}" Content="&#xE74D;"
+                                                                Width="24" Height="24" FontSize="12" Margin="0,2,0,0"
+                                                                AutomationProperties.Name="Excluir áudio"
+                                                                Command="{Binding DataContext.ExcluirAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                CommandParameter="{Binding}" ToolTip="Excluir" />
+                                                    </StackPanel>
                                                     </StackPanel>
                                                 </Grid>
 
@@ -201,14 +306,6 @@
                                                 <TextBlock Grid.Row="1" Text="{Binding Nome}" FontSize="14" FontWeight="SemiBold"
                                                            Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
                                                            TextWrapping="NoWrap" Margin="0,10,0,0" ToolTip="{Binding Nome}" />
-
-                                                <!-- Duração + volume -->
-                                                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,4,0,0">
-                                                    <TextBlock Text="{Binding DuracaoTexto}" Style="{StaticResource Caption}" />
-                                                    <Border Width="3" Height="3" CornerRadius="2" Background="{StaticResource TextMutedBrush}"
-                                                            Margin="6,0" VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding VolumeTexto}" Style="{StaticResource Caption}" />
-                                                </StackPanel>
 
                                                 <!-- Chip de atalho -->
                                                 <Border Grid.Row="3" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
@@ -243,21 +340,28 @@
                                                     </Grid>
                                                 </Border>
 
-                                                <!-- Ações: tocar (sempre dispara uma nova instância) e parar (interrompe esta) -->
+                                                <!-- Tocar uma vez, alternar repetição e parar todas as instâncias deste som. -->
                                                 <Grid Grid.Row="4">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="8" />
+                                                        <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="*" />
                                                     </Grid.ColumnDefinitions>
 
-                                                    <Button Grid.Column="0" Style="{StaticResource PlayButton}" Width="36" Height="36"
+                                                    <Button Grid.Column="0" Style="{StaticResource PlayButton}" Width="30" Height="30"
                                                             FontSize="14" HorizontalAlignment="Center" Content="&#xE768;"
                                                             AutomationProperties.Name="Tocar áudio"
                                                             Command="{Binding DataContext.TocarAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                             CommandParameter="{Binding}" ToolTip="Tocar (nova instância)" />
 
-                                                    <Button Grid.Column="2" Style="{StaticResource StopButton}" Width="36" Height="36"
+                                                    <ToggleButton Grid.Column="1" Style="{StaticResource LoopButton}" Width="30" Height="30"
+                                                                  HorizontalAlignment="Center"
+                                                                  AutomationProperties.Name="Repetir áudio em loop"
+                                                                  IsChecked="{Binding EmLoop, Mode=TwoWay}"
+                                                                  Command="{Binding DataContext.AlternarLoopAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                  CommandParameter="{Binding}" />
+
+                                                    <Button Grid.Column="2" Style="{StaticResource StopButton}" Width="30" Height="30"
                                                             FontSize="13" HorizontalAlignment="Center"
                                                             AutomationProperties.Name="Parar áudio"
                                                             Command="{Binding DataContext.PararAudioCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"

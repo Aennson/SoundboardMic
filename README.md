@@ -45,10 +45,20 @@ Construído em **.NET 8 / WPF** com **NAudio** (WASAPI), **SQLite** e hook globa
 
 ---
 
+## ⬇️ Download
+
+Baixe o `SoundboardMic.exe` (ou o `.zip`) da [última release](https://github.com/Aennson/SoundboardMic/releases/latest).
+É um executável único e autocontido — não precisa instalar o .NET. Só o VB-Cable (abaixo) é necessário.
+
+Novas releases são geradas pelo GitHub Actions ao enviar uma tag `v*`
+(`git tag v1.2.0 && git push origin v1.2.0`) ou manualmente em **Actions → Release → Run workflow**.
+
+---
+
 ## 📋 Pré-requisitos
 
 ### 1. .NET 8 Desktop Runtime
-Necessário para executar. Baixe em
+Necessário apenas para executar builds compilados localmente (a release já inclui o runtime). Baixe em
 <https://dotnet.microsoft.com/download/dotnet/8.0> (escolha **.NET Desktop Runtime 8.x**).
 Para compilar, instale o **.NET 8 SDK**.
 

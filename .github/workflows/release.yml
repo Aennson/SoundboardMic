@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag da release (ex.: v1.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore SoundboardMic.sln
+
+      - name: Test
+        run: dotnet test tests\SoundboardMic.Tests -c Release --no-restore --verbosity normal
+
+      - name: Publish (self-contained, single file)
+        shell: pwsh
+        run: |
+          $version = $env:TAG.TrimStart('v')
+          dotnet publish src\SoundboardMic.App\SoundboardMic.App.csproj -c Release -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=None `
+            -p:Version=$version `
+            -o publish
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Rename-Item publish\SoundboardMic.App.exe SoundboardMic.exe
+          Compress-Archive -Path publish\SoundboardMic.exe -DestinationPath "SoundboardMic-$env:TAG-win-x64.zip"
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $zip = "SoundboardMic-$env:TAG-win-x64.zip"
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:TAG publish\SoundboardMic.exe $zip --clobber
+          } else {
+            gh release create $env:TAG publish\SoundboardMic.exe $zip `
+              --title "SoundboardMic $env:TAG" `
+              --generate-notes `
+              --target $env:GITHUB_SHA
+          }
+          exit $LASTEXITCODE
